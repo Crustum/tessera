@@ -1,0 +1,29 @@
+# Crustum Tessera
+
+Prefer package docs and the `tessera-development` skill for orientation.
+
+@scoped(['config/tessera.php', 'config/bootstrap.php'])
+## Tessera config
+- Load `config/tessera.php` after manifest install; publish via plugin-manifest (no dedicated install command).
+- Set access / refresh / personal-access TTLs independently (`Tessera::tokensExpireIn` etc.).
+- Register scopes with `Tessera::tokensCan(...)`; enable Password/Implicit grants only when required.
+- Wire auth once: `TokenAuthenticator` before Session when Bearer must win; League `ResourceServer` from the container — see skill.
+@endscoped
+
+@scoped(['src/Model/Entity/**', 'src/Model/Table/**'])
+## OAuth user
+- User entity must implement `OAuthenticatable` and use `HasApiTokensTrait`.
+- Attach Tessera users Behavior / associations on the Users table when linking clients and tokens.
+@endscoped
+
+@scoped(['config/routes.php', 'src/Middleware/**'])
+## Token middleware & SPA
+- Enforce scopes with named route middleware: `CheckTokenMiddleware` (all scopes) or `CheckTokenForAnyScopeMiddleware` (any).
+- Pass required scopes as middleware constructor args; use `EnsureClientIsResourceOwnerMiddleware` for client-credentials style.
+- SPA cookie auth: `CreateFreshApiTokenMiddleware`; prefer documented CSRF/cookie setup over ad hoc `ignoreCsrfToken()`.
+@endscoped
+
+@scoped(['tests/**'])
+## Tessera tests
+- Prefer `Tessera::actingAs()` / `actingAsClient()` (+ `clearActingAs()`); `TesseraTestCase` when available.
+@endscoped

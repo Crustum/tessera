@@ -1,0 +1,181 @@
+---
+name: tessera-development
+description: "Develops OAuth2 API authentication with Crustum Tessera for CakePHP. Activates when installing or configuring Tessera; setting up OAuth2 grants (authorization code, client credentials, personal access tokens, device authorization); managing OAuth clients; protecting API routes with TokenAuthenticator and CheckToken* middleware; defining or checking token scopes; configuring SPA cookie authentication; handling token lifetimes and refresh tokens; or when the user mentions Tessera, OAuth2, API tokens, bearer tokens, or CakePHP API authentication. Use this skill whenever the user works with OAuth2, API tokens, or third-party API access in CakePHP, even if they don't explicitly mention Tessera."
+license: MIT
+metadata:
+  author: crustum
+---
+# Tessera OAuth2 Authentication
+
+## Documentation First
+
+Prefer Tessera package docs and Ignis project guidelines before inventing OAuth wiring. This skill orients you — the package docs hold grant-specific details. There is no Ignis `search-docs` tool.
+
+## Installation
+
+Typical host steps:
+
+### 1. Require and install plugin assets
+
+```bash
+composer require crustum/tessera
+```
+
+Publish config + migrations via **crustum/plugin-manifest** (same pattern as other Crustum plugins). Then migrate and generate keys:
+
+```bash
+{{ assist.cakeCommand('migrations migrate') }}
+{{ assist.cakeCommand('tessera keys') }}
+```
+
+Optional: create a personal-access client after migrate:
+
+```bash
+{{ assist.cakeCommand('tessera client --personal') }}
+```
+
+### 2. Configure the User entity
+
+The host user must implement `OAuthenticatable` and use `HasApiTokensTrait`. Missing the interface is a common setup mistake.
+
+@ignissnippet("User HasApiTokens", "php")
+use Crustum\Tessera\Contracts\OAuthenticatable;
+use Crustum\Tessera\Trait\HasApiTokensTrait;
+use Cake\ORM\Entity;
+
+class User extends Entity implements OAuthenticatable
+{
+    use HasApiTokensTrait;
+}
+@endignissnippet
+
+Also attach Tessera users Behavior / associations on the host Users table when linking OAuth clients and tokens (see package docs).
+
+### 3. Wire Authentication
+
+Load `TokenAuthenticator` (typically first) in the host `AuthenticationService`, with League `ResourceServer` from the container. Session/Form authenticators remain for consent screens.
+
+Load `config/tessera.php` via `Configure::load('tessera', 'default')` after plugin-manifest install.
+
+## Choosing a Grant Type
+
+| Use Case | Grant Type | Client flag |
+|----------|-----------|-------------|
+| Third-party app accessing user data | Authorization Code | (default) |
+| Mobile/SPA without client secret | Authorization Code + PKCE | `--public` |
+| Machine-to-machine, no user context | Client Credentials | `--client` |
+| User-generated API keys | Personal Access Tokens | `--personal` |
+| Smart TV, CLI, IoT devices | Device Authorization | `--device` |
+
+**Legacy grants** (Password, Implicit) are off by default. Enable explicitly with `Tessera::enablePasswordGrant()` / `Tessera::enableImplicitGrant()` only when required.
+
+## Client Management
+
+```bash
+{{ assist.cakeCommand('tessera client') }}
+{{ assist.cakeCommand('tessera client --public') }}
+{{ assist.cakeCommand('tessera client --client') }}
+{{ assist.cakeCommand('tessera client --personal') }}
+{{ assist.cakeCommand('tessera client --device') }}
+```
+
+Additional options: `--name=`, `--redirect_uri=`, `--provider=`, `--password`, `--implicit`.
+
+Client secrets are hashed — the plain secret is shown only at creation time.
+
+## Protecting Routes
+
+Authenticate API requests with `TokenAuthenticator` (Bearer or Tessera cookie). Enforce scopes with PSR-15 middleware registered as **named route middleware**. Pass required scopes as constructor arguments on the middleware instance.
+
+@ignissnippet("Register scope middleware", "php")
+use Crustum\Tessera\Middleware\CheckTokenMiddleware;
+use Crustum\Tessera\Middleware\CheckTokenForAnyScopeMiddleware;
+use League\OAuth2\Server\ResourceServer;
+
+$server = $container->get(ResourceServer::class);
+
+$routes->registerMiddleware(
+    'tessera.check_orders_read',
+    new CheckTokenMiddleware($server, ['orders:read']),
+);
+$routes->registerMiddleware(
+    'tessera.check_any_orders',
+    new CheckTokenForAnyScopeMiddleware($server, ['orders:read', 'orders:write']),
+);
+
+$routes->connect('/orders', ['controller' => 'Orders', 'action' => 'index'])
+    ->setMiddleware(['tessera.check_orders_read']);
+@endignissnippet
+
+- `CheckTokenMiddleware` — token must include **every** listed scope
+- `CheckTokenForAnyScopeMiddleware` — token must include **any** listed scope
+- `EnsureClientIsResourceOwnerMiddleware` — client-credentials style (client is resource owner)
+
+### Programmatic scope checking
+
+@ignissnippet("tokenCan check", "php")
+if ($user->tokenCan('place-orders')) {
+    // ...
+}
+@endignissnippet
+
+## Key Configuration
+
+Configure via `Tessera` static API (e.g. Application bootstrap) and `config/tessera.php`.
+
+@ignissnippet("Tessera lifetimes and scopes", "php")
+use Crustum\Tessera\Tessera;
+use DateInterval;
+
+Tessera::tokensExpireIn(new DateInterval('P15D'));
+Tessera::refreshTokensExpireIn(new DateInterval('P30D'));
+Tessera::personalAccessTokensExpireIn(new DateInterval('P6M'));
+
+Tessera::tokensCan([
+    'place-orders' => 'Place orders',
+    'check-status' => 'Check order status',
+]);
+@endignissnippet
+
+## SPA Cookie Authentication
+
+`CreateFreshApiTokenMiddleware` issues an encrypted JWT cookie for first-party SPAs. Follow package docs for CSRF / cookie name configuration. Prefer host CSRF middleware exclusion only when you understand the trade-offs (`Tessera::ignoreCsrfToken()`).
+
+## Testing
+
+Feature tests use `Tessera::actingAs()` / `Tessera::actingAsClient()` (clear with `Tessera::clearActingAs()` in tearDown). Prefer `TesseraTestCase` + fixtures + Cake `PHPUnitExtension`.
+
+@ignissnippet("Acting as user/client", "php")
+use Crustum\Tessera\Tessera;
+
+Tessera::actingAs($user, ['scope1', 'scope2'], $client);
+Tessera::actingAsClient($client, ['scope1']);
+
+$oauthClient = Tessera::tokenClient();
+@endignissnippet
+
+## Token Maintenance
+
+```bash
+{{ assist.cakeCommand('tessera purge') }}
+{{ assist.cakeCommand('tessera purge --revoked') }}
+{{ assist.cakeCommand('tessera purge --expired') }}
+{{ assist.cakeCommand('tessera hash --force') }}
+```
+
+Schedule `tessera purge` for expired/revoked cleanup. Hash plain client secrets after migrating legacy data with `tessera hash`.
+
+## Events
+
+Tessera events (e.g. access token created/revoked, refresh token created) live under `Crustum\Tessera\Event`. Listen via Cake `EventManager`.
+
+## Common Pitfalls
+
+- **Missing `OAuthenticatable`** — require both the interface and `HasApiTokensTrait` on the user entity.
+- **Authenticator order** — put `TokenAuthenticator` before Session when Bearer must win; `clearSession()` in Feature tests before Bearer-only calls.
+- **Scopes on middleware** — constructor args + named middleware aliases only.
+- **Command names** — space-separated (`tessera keys`, `tessera client`, `tessera purge`).
+- **Token lifetimes** — access, refresh, and personal-access TTLs are independent.
+- **Client secrets are hashed** — plain secret only at creation time.
+- **Legacy grants** — Password / Implicit must be enabled explicitly and are not recommended.
+- **Install** — use plugin-manifest for config/migrations; there is no dedicated install console command.
