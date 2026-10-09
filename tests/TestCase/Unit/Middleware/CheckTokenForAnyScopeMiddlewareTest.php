@@ -14,8 +14,8 @@ use Crustum\Tessera\Middleware\CheckTokenForAnyScopeMiddleware;
 use Crustum\Tessera\TransientToken;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use League\OAuth2\Server\ResourceServer;
-use Mockery;
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use JMac\Testing\Double;
+use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -25,16 +25,17 @@ use Psr\Http\Server\RequestHandlerInterface;
  */
 class CheckTokenForAnyScopeMiddlewareTest extends TestCase
 {
-    use MockeryPHPUnitIntegration;
+    use VerifiesDoubles;
 
     /**
      * @return void
      */
     public function testRequestIsPassedAlongIfTokenIsValid(): void
     {
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $resourceServer->shouldReceive('validateAuthenticatedRequest')->andReturn($psr = Mockery::mock(ServerRequestInterface::class));
-        $psr->shouldReceive('getAttributes')->andReturn([
+        $resourceServer = Double::for(ResourceServer::class);
+        $psr = Double::for(ServerRequestInterface::class);
+        $resourceServer->allows('validateAuthenticatedRequest')->returns($psr);
+        $psr->allows('getAttributes')->returns([
             'oauth_user_id' => 1,
             'oauth_client_id' => 1,
             'oauth_access_token_id' => 'token',
@@ -55,11 +56,11 @@ class CheckTokenForAnyScopeMiddlewareTest extends TestCase
      */
     public function testRequestIsPassedAlongIfTokenIsTransient(): void
     {
-        $user = Mockery::mock(OAuthenticatable::class);
-        $user->shouldReceive('currentAccessToken')->andReturn(new TransientToken());
+        $user = Double::for(OAuthenticatable::class);
+        $user->allows('currentAccessToken')->returns(new TransientToken());
 
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $resourceServer->shouldNotReceive('validateAuthenticatedRequest');
+        $resourceServer = Double::for(ResourceServer::class);
+        $resourceServer->expects('validateAuthenticatedRequest')->never();
 
         $middleware = new CheckTokenForAnyScopeMiddleware($resourceServer, ['notfoo']);
         $request = (new ServerRequest())
@@ -77,9 +78,10 @@ class CheckTokenForAnyScopeMiddlewareTest extends TestCase
      */
     public function testRequestIsPassedAlongIfTokenHasAnyRequiredScope(): void
     {
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $resourceServer->shouldReceive('validateAuthenticatedRequest')->andReturn($psr = Mockery::mock(ServerRequestInterface::class));
-        $psr->shouldReceive('getAttributes')->andReturn([
+        $resourceServer = Double::for(ResourceServer::class);
+        $psr = Double::for(ServerRequestInterface::class);
+        $resourceServer->allows('validateAuthenticatedRequest')->returns($psr);
+        $psr->allows('getAttributes')->returns([
             'oauth_user_id' => 1,
             'oauth_client_id' => 1,
             'oauth_access_token_id' => 'token',
@@ -102,8 +104,8 @@ class CheckTokenForAnyScopeMiddlewareTest extends TestCase
     {
         $this->expectException(AuthenticationException::class);
 
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $resourceServer->shouldReceive('validateAuthenticatedRequest')->andThrow(
+        $resourceServer = Double::for(ResourceServer::class);
+        $resourceServer->allows('validateAuthenticatedRequest')->throws(
             new OAuthServerException('message', 500, 'error type'),
         );
 
@@ -120,9 +122,10 @@ class CheckTokenForAnyScopeMiddlewareTest extends TestCase
     {
         $this->expectException(MissingScopeException::class);
 
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $resourceServer->shouldReceive('validateAuthenticatedRequest')->andReturn($psr = Mockery::mock(ServerRequestInterface::class));
-        $psr->shouldReceive('getAttributes')->andReturn([
+        $resourceServer = Double::for(ResourceServer::class);
+        $psr = Double::for(ServerRequestInterface::class);
+        $resourceServer->allows('validateAuthenticatedRequest')->returns($psr);
+        $psr->allows('getAttributes')->returns([
             'oauth_user_id' => 1,
             'oauth_client_id' => 1,
             'oauth_access_token_id' => 'token',
@@ -140,13 +143,13 @@ class CheckTokenForAnyScopeMiddlewareTest extends TestCase
      */
     public function testRequestIsPassedAlongIfScopesArePresentOnToken(): void
     {
-        $resourceServer = Mockery::mock(ResourceServer::class);
+        $resourceServer = Double::for(ResourceServer::class);
         $middleware = new CheckTokenForAnyScopeMiddleware($resourceServer, ['foo', 'bar']);
-        $request = Mockery::mock(ServerRequestInterface::class);
-        $request->shouldReceive('getAttribute')->with('identity')->andReturn($user = Mockery::mock(OAuthenticatable::class));
-        $user->shouldReceive('currentAccessToken')->andReturn($token = Mockery::mock(ScopeAuthorizable::class));
-        $token->shouldReceive('can')->with('foo')->andReturn(true);
-        $token->shouldReceive('can')->with('bar')->andReturn(false);
+        $request = Double::for(ServerRequestInterface::class);
+        $request->allows('getAttribute')->with('identity')->returns($user = Double::for(OAuthenticatable::class));
+        $user->allows('currentAccessToken')->returns($token = Double::for(ScopeAuthorizable::class));
+        $token->allows('can')->with('foo')->returns(true);
+        $token->allows('can')->with('bar')->returns(false);
 
         $response = new Response(['body' => 'response']);
         $result = $middleware->process($request, $this->makeHandler($response));
@@ -161,13 +164,13 @@ class CheckTokenForAnyScopeMiddlewareTest extends TestCase
     {
         $this->expectException(MissingScopeException::class);
 
-        $resourceServer = Mockery::mock(ResourceServer::class);
+        $resourceServer = Double::for(ResourceServer::class);
         $middleware = new CheckTokenForAnyScopeMiddleware($resourceServer, ['foo', 'bar']);
-        $request = Mockery::mock(ServerRequestInterface::class);
-        $request->shouldReceive('getAttribute')->with('identity')->andReturn($user = Mockery::mock(OAuthenticatable::class));
-        $user->shouldReceive('currentAccessToken')->andReturn($token = Mockery::mock(ScopeAuthorizable::class));
-        $token->shouldReceive('can')->with('foo')->andReturn(false);
-        $token->shouldReceive('can')->with('bar')->andReturn(false);
+        $request = Double::for(ServerRequestInterface::class);
+        $request->allows('getAttribute')->with('identity')->returns($user = Double::for(OAuthenticatable::class));
+        $user->allows('currentAccessToken')->returns($token = Double::for(ScopeAuthorizable::class));
+        $token->allows('can')->with('foo')->returns(false);
+        $token->allows('can')->with('bar')->returns(false);
 
         $middleware->process($request, $this->makeUnusedHandler());
     }
@@ -177,8 +180,8 @@ class CheckTokenForAnyScopeMiddlewareTest extends TestCase
      */
     protected function makeUnusedHandler(): RequestHandlerInterface
     {
-        $handler = Mockery::mock(RequestHandlerInterface::class);
-        $handler->shouldNotReceive('handle');
+        $handler = Double::for(RequestHandlerInterface::class);
+        $handler->expects('handle')->never();
 
         return $handler;
     }
@@ -189,8 +192,8 @@ class CheckTokenForAnyScopeMiddlewareTest extends TestCase
      */
     protected function makeHandler(ResponseInterface $response): RequestHandlerInterface
     {
-        $handler = Mockery::mock(RequestHandlerInterface::class);
-        $handler->shouldReceive('handle')->once()->andReturn($response);
+        $handler = Double::for(RequestHandlerInterface::class);
+        $handler->expects('handle')->returns($response);
 
         return $handler;
     }

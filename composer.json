@@ -22,25 +22,25 @@
         "php": ">=8.2",
         "ext-json": "*",
         "ext-openssl": "*",
-        "cakephp/authentication": "^3.0",
+        "cakephp/authentication": "^3.0 | ^4.0",
         "cakephp/cakephp": "^5.0",
         "crustum/plugin-manifest": "^1.0",
         "firebase/php-jwt": "^6.4|^7.0",
         "league/oauth2-server": "^9.2",
         "php-http/discovery": "^1.20",
-        "phpseclib/phpseclib": "^3.0",
+        "phpseclib/phpseclib": "^4.0",
         "psr/http-factory-implementation": "*",
         "symfony/psr-http-message-bridge": "^7.1|^8.0"
     },
     "require-dev": {
         "cakephp/bake": "^3.0",
         "cakephp/migrations": "^4.0|^5.0",
-        "cakephp/cakephp-codesniffer": "^5.0",
-        "mockery/mockery": "^1.6",
+        "cakephp/cakephp-codesniffer": "^5.3",
         "phpstan/phpstan": "^2.0",
         "phpunit/phpunit": "^10.5.5 || ^11.1.3 || ^12.5.0",
         "rector/rector": "^2.5",
-        "vierge-noire/cakephp-fixture-factories": "^3.0"
+        "vierge-noire/cakephp-fixture-factories": "^3.0",
+        "jasonmccreary/double": "^1.0"
     },
     "suggest": {
         "cakephp/authorization": "Host permission rules for OAuth consent / protected routes",

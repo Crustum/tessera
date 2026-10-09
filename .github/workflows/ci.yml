@@ -132,18 +132,11 @@ jobs:
     - name: composer install
       run: composer install --prefer-dist --no-progress
 
-    - name: Install phive
-      run: |
-        wget -O phive.phar https://phar.io/releases/phive.phar
-        chmod +x phive.phar
-        sudo mv phive.phar /usr/local/bin/phive
-
-    - name: Install PHP tools with phive
-      run: |
-        phive install --trust-gpg-keys CF1A108D0E7AE720,51C67305FFC2E5C0,12CE0F1D262429A5,99BF4D9A33D65E1E
-
     - name: Run PHP CodeSniffer
       run: composer cs-check
+
+    - name: Run Rector
+      run: composer rector-check
 
     - name: Run phpstan
       run: composer stan

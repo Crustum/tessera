@@ -106,6 +106,6 @@ class HashCommand extends Command
     {
         $info = password_get_info($value);
 
-        return ($info['algoName'] ?? '') !== 'unknown';
+        return $info['algoName'] !== 'unknown';
     }
 }

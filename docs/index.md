@@ -130,6 +130,7 @@ Finally, register Tessera's `TokenAuthenticator` in your host `AuthenticationSer
 use Authentication\AuthenticationService;
 use Authentication\AuthenticationServiceInterface;
 use Crustum\Tessera\Authenticator\TokenAuthenticator;
+use Crustum\Tessera\Support\AuthenticationCompat;
 use League\OAuth2\Server\ResourceServer;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -137,18 +138,8 @@ public function getAuthenticationService(ServerRequestInterface $request): Authe
 {
     $service = new AuthenticationService();
 
-    $passwordIdentifier = [
-        'Authentication.Password' => [
-            'fields' => [
-                'username' => 'email',
-                'password' => 'password',
-            ],
-            'resolver' => [
-                'className' => 'Authentication.Orm',
-                'userModel' => 'Users',
-            ],
-        ],
-    ];
+    // Works on cakephp/authentication ^3.0 and ^4.0 (collection vs. factory config).
+    $passwordIdentifier = AuthenticationCompat::passwordIdentifier();
 
     $service->loadAuthenticator(TokenAuthenticator::class, [
         'server' => $this->getContainer()->get(ResourceServer::class),

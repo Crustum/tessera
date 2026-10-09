@@ -5,15 +5,15 @@ namespace Crustum\Tessera\Test\TestCase;
 
 use Cake\TestSuite\TestCase;
 use Crustum\Tessera\AccessToken;
-use Mockery;
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use JMac\Testing\Double;
+use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
 
 /**
  * HasApiTokens trait unit tests.
  */
 class HasApiTokensTest extends TestCase
 {
-    use MockeryPHPUnitIntegration;
+    use VerifiesDoubles;
 
     /**
      * @return void
@@ -21,9 +21,9 @@ class HasApiTokensTest extends TestCase
     public function testTokenCanIndicatesIfTokenHasGivenScope(): void
     {
         $user = new HasApiTokensTestStub();
-        $token = Mockery::mock(AccessToken::class);
-        $token->shouldReceive('can')->with('scope')->andReturn(true);
-        $token->shouldReceive('can')->with('another-scope')->andReturn(false);
+        $token = Double::for(AccessToken::class);
+        $token->expects('can')->with('scope')->returns(true);
+        $token->expects('can')->with('another-scope')->returns(false);
 
         $this->assertTrue($user->withAccessToken($token)->tokenCan('scope'));
         $this->assertFalse($user->withAccessToken($token)->tokenCan('another-scope'));

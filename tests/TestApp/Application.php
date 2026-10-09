@@ -14,13 +14,17 @@ use Cake\Http\MiddlewareQueue;
 use Cake\Routing\Middleware\RoutingMiddleware;
 use Cake\Routing\RouteBuilder;
 use Crustum\Tessera\Authenticator\TokenAuthenticator;
+use Crustum\Tessera\Support\AuthenticationCompat;
 use Crustum\Tessera\Middleware\CheckTokenForAnyScopeMiddleware;
 use Crustum\Tessera\Middleware\CheckTokenMiddleware;
 use Crustum\Tessera\Middleware\ConvertOAuthExceptionsMiddleware;
+use Crustum\Tessera\Middleware\CreateFreshApiTokenMiddleware;
 use Crustum\Tessera\Middleware\EnsureClientIsResourceOwnerMiddleware;
 use Crustum\Tessera\TesseraPlugin;
+use Crustum\Tessera\ApiTokenCookieFactory;
 use League\OAuth2\Server\ResourceServer;
 use Psr\Http\Message\ServerRequestInterface;
+use TestApp\Middleware\CsrfHeaderMiddleware;
 
 /**
  * Test application for Crustum Tessera.
@@ -48,6 +52,7 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
     public function middleware(MiddlewareQueue $middlewareQueue): MiddlewareQueue
     {
         $middlewareQueue
+            ->add(new CsrfHeaderMiddleware())
             ->add(new ConvertOAuthExceptionsMiddleware())
             ->add(new BodyParserMiddleware())
             ->add(new AuthenticationMiddleware($this))
@@ -104,6 +109,10 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
             'tessera.check_any_testfoo',
             new CheckTokenForAnyScopeMiddleware($server, ['testFoo']),
         );
+        $routes->registerMiddleware(
+            'tessera.create_fresh',
+            new CreateFreshApiTokenMiddleware($this->getContainer()->get(ApiTokenCookieFactory::class)),
+        );
 
         $routes->scope('/', function (RouteBuilder $builder): void {
             $builder->connect('/foo', ['controller' => 'Protected', 'action' => 'index'])
@@ -117,6 +126,19 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
                 ->setMiddleware(['tessera.check_create_delete']);
             $builder->connect('/token-info', ['controller' => 'Protected', 'action' => 'tokenInfo'])
                 ->setMethods(['GET']);
+            $builder->connect('/whoami', ['controller' => 'Protected', 'action' => 'whoAmI'])
+                ->setMethods(['GET']);
+            $builder->connect('/guard', ['controller' => 'Protected', 'action' => 'guardInfo'])
+                ->setMethods(['GET']);
+            $builder->connect('/fresh', ['controller' => 'Protected', 'action' => 'index'])
+                ->setMethods(['GET', 'POST'])
+                ->setMiddleware(['tessera.create_fresh']);
+            $builder->connect('/fresh-redirect', ['controller' => 'Protected', 'action' => 'redirectToFresh'])
+                ->setMethods(['GET'])
+                ->setMiddleware(['tessera.create_fresh']);
+            $builder->connect('/fresh-existing', ['controller' => 'Protected', 'action' => 'existingCookie'])
+                ->setMethods(['GET'])
+                ->setMiddleware(['tessera.create_fresh']);
             $builder->connect('/acting-as/auth', ['controller' => 'Protected', 'action' => 'actingAsAuth'])
                 ->setMethods(['GET']);
             $builder->connect('/acting-as/check-scopes', ['controller' => 'Protected', 'action' => 'index'])
@@ -163,18 +185,7 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
             'queryParam' => 'redirect',
         ]);
 
-        $passwordIdentifier = [
-            'Authentication.Password' => [
-                'fields' => [
-                    'username' => 'email',
-                    'password' => 'password',
-                ],
-                'resolver' => [
-                    'className' => 'Authentication.Orm',
-                    'userModel' => 'Users',
-                ],
-            ],
-        ];
+        $passwordIdentifier = AuthenticationCompat::passwordIdentifier();
 
         $service->loadAuthenticator(TokenAuthenticator::class, [
             'server' => $this->getContainer()->get(ResourceServer::class),

@@ -163,7 +163,11 @@ class Tessera
     public static string $clientModel = Model\Entity\Client::class;
 
     /**
-     * Whether client primary keys are UUIDs.
+     * Whether client primary keys are unique IDs.
+     *
+     * When enabled, lookups with malformed IDs return null without
+     * touching the database. The ID format is validated by the client
+     * model (`Client::isValidUniqueId()`, UUID by default).
      *
      * @var bool
      */
@@ -454,12 +458,12 @@ class Tessera
      * Get or set when client credentials grant tokens expire.
      *
      * @param \DateTimeInterface|\DateInterval|null $date Expiry or interval
-     * @return \DateInterval|null
+     * @return \DateInterval
      */
-    public static function clientCredentialsTokensExpireIn(DateTimeInterface|DateInterval|null $date = null): ?DateInterval
+    public static function clientCredentialsTokensExpireIn(DateTimeInterface|DateInterval|null $date = null): DateInterval
     {
         if ($date === null) {
-            return static::$clientCredentialsTokensExpireIn;
+            return static::$clientCredentialsTokensExpireIn ?? static::tokensExpireIn();
         }
 
         return static::$clientCredentialsTokensExpireIn = $date instanceof DateTimeInterface

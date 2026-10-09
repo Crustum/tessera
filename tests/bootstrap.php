@@ -129,8 +129,8 @@ Plugin::getCollection()->add(new TesseraPlugin());
 
 Tessera::allowActingAs(true);
 
-if (file_exists(dirname(__DIR__) . '/config/tessera.php')) {
-    Configure::write(require dirname(__DIR__) . '/config/tessera.php');
+if (file_exists(__DIR__ . '/../config/tessera.php')) {
+    Configure::write(require __DIR__ . '/../config/tessera.php');
 }
 
 $loader = new SchemaLoader();

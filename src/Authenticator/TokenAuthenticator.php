@@ -63,10 +63,10 @@ class TokenAuthenticator extends AbstractAuthenticator implements StatelessInter
     protected ?UserProvider $users = null;
 
     /**
-     * @param \Authentication\Identifier\IdentifierInterface $identifier Identifier
+     * @param \Authentication\Identifier\IdentifierInterface|null $identifier Identifier (null on auth v4 = lazy default)
      * @param array<string, mixed> $config Config (`server`, `clients`, `users`, `providerName`)
      */
-    public function __construct(IdentifierInterface $identifier, array $config = [])
+    public function __construct(?IdentifierInterface $identifier = null, array $config = [])
     {
         parent::__construct($identifier, $config);
 
@@ -190,7 +190,7 @@ class TokenAuthenticator extends AbstractAuthenticator implements StatelessInter
 
         $client = $this->clientRepository()->findActive((string)$psr->getAttribute('oauth_client_id'));
         if (
-            !$client
+            !$client instanceof Client
             || ($client->provider && $client->provider !== $this->userProvider()->getProviderName())
         ) {
             return null;
@@ -411,8 +411,15 @@ class TokenAuthenticator extends AbstractAuthenticator implements StatelessInter
      */
     protected function userProvider(): UserProvider
     {
+        try {
+            $identifier = $this->getIdentifier();
+        } catch (RuntimeException) {
+            // Auth v4 allows a null identifier (lazy default); Tessera falls back to ORM.
+            $identifier = null;
+        }
+
         return $this->users ??= new UserProvider(
-            $this->getIdentifier(),
+            $identifier,
             (string)($this->getConfig('providerName') ?? Configure::read('Tessera.guard') ?? 'users'),
         );
     }

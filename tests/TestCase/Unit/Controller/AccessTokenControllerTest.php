@@ -10,15 +10,16 @@ use Crustum\Tessera\Exception\OAuthServerException;
 use Laminas\Diactoros\Response as PsrResponse;
 use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\Exception\OAuthServerException as LeagueException;
-use Mockery;
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use JMac\Testing\Double;
+use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
+use JMac\Testing\Matching\Argument;
 
 /**
  * AccessTokenController unit tests.
  */
 class AccessTokenControllerTest extends TestCase
 {
-    use MockeryPHPUnitIntegration;
+    use VerifiesDoubles;
 
     /**
      * @return void
@@ -32,10 +33,10 @@ class AccessTokenControllerTest extends TestCase
         $psrResponse = new PsrResponse();
         $psrResponse->getBody()->write(json_encode(['access_token' => 'access-token']));
 
-        $server = Mockery::mock(AuthorizationServer::class);
-        $server->shouldReceive('respondToAccessTokenRequest')
-            ->with($request, Mockery::type(PsrResponse::class))
-            ->andReturn($psrResponse);
+        $server = Double::for(AuthorizationServer::class);
+        $server->allows('respondToAccessTokenRequest')
+            ->with($request, Argument::type(PsrResponse::class))
+            ->returns($psrResponse);
 
         $response = $controller->issueToken($server);
 
@@ -51,10 +52,10 @@ class AccessTokenControllerTest extends TestCase
         $controller = new AccessTokenController($request);
         $controller->setRequest($request);
 
-        $server = Mockery::mock(AuthorizationServer::class);
-        $server->shouldReceive('respondToAccessTokenRequest')
-            ->with($request, Mockery::type(PsrResponse::class))
-            ->andThrow(LeagueException::invalidCredentials());
+        $server = Double::for(AuthorizationServer::class);
+        $server->allows('respondToAccessTokenRequest')
+            ->with($request, Argument::type(PsrResponse::class))
+            ->throws(LeagueException::invalidCredentials());
 
         $this->expectException(OAuthServerException::class);
 

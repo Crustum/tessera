@@ -112,6 +112,26 @@ class ClientCredentialsGrantTest extends TesseraTestCase
     /**
      * @return void
      */
+    public function testGettingAccessTokenWithMalformedUuidClientId(): void
+    {
+        $this->post('/oauth/token', [
+            'grant_type' => 'client_credentials',
+            'client_id' => 'x',
+            'client_secret' => 'secret',
+        ]);
+
+        $this->assertResponseCode(401);
+        $json = json_decode((string)$this->_response->getBody(), true);
+        $this->assertIsArray($json);
+        $this->assertSame('invalid_client', $json['error']);
+        $this->assertSame('Client authentication failed', $json['error_description']);
+
+        $this->assertSame(0, Tessera::tokensTable()->find()->count());
+    }
+
+    /**
+     * @return void
+     */
     public function testPublicClient(): void
     {
         $table = Tessera::clientsTable();

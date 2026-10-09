@@ -126,7 +126,7 @@ class OAuthServerException extends RuntimeException
     }
 
     /**
-     * Wrap a value as a list (Illuminate Arr::wrap replacement).
+     * Wrap a value as a list.
      *
      * @param mixed $value Value to wrap
      * @return list<mixed>

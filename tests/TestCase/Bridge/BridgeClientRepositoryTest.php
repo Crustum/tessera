@@ -9,15 +9,15 @@ use Crustum\Tessera\Bridge\Client;
 use Crustum\Tessera\Bridge\ClientRepository as BridgeClientRepository;
 use Crustum\Tessera\ClientRepository;
 use Crustum\Tessera\Model\Entity\Client as ClientEntity;
-use Mockery;
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use JMac\Testing\Double;
+use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
 
 /**
  * Bridge client repository unit tests.
  */
 class BridgeClientRepositoryTest extends TestCase
 {
-    use MockeryPHPUnitIntegration;
+    use VerifiesDoubles;
 
     /**
      * @var \Crustum\Tessera\Bridge\ClientRepository
@@ -44,14 +44,12 @@ class BridgeClientRepositoryTest extends TestCase
             ['setter' => false],
         );
 
-        $clientModelRepository = Mockery::mock(ClientRepository::class);
-        $clientModelRepository->shouldReceive('findActive')
-            ->withAnyArgs()
-            ->andReturn($client);
+        $clientModelRepository = Double::for(ClientRepository::class);
+        $clientModelRepository->allows('findActive')->returns($client);
 
-        $hasher = Mockery::mock(PasswordHasherInterface::class);
-        $hasher->shouldReceive('check')->with('secret', $client->get('secret'))->andReturn(true);
-        $hasher->shouldReceive('check')->withAnyArgs()->andReturn(false);
+        $hasher = Double::for(PasswordHasherInterface::class);
+        $hasher->allows('check')->with('secret', $client->get('secret'))->returns(true);
+        $hasher->allows('check')->returns(false);
 
         $this->repository = new BridgeClientRepository($clientModelRepository, $hasher);
     }

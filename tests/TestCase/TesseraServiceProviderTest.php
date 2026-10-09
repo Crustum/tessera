@@ -72,7 +72,10 @@ class TesseraServiceProviderTest extends TestCase
      */
     public function testCanUseCryptoKeysFromConfig(): void
     {
-        $privateKey = openssl_pkey_new();
+        $privateKey = openssl_pkey_new([
+            'private_key_type' => OPENSSL_KEYTYPE_RSA,
+            'private_key_bits' => 4096,
+        ]);
         $this->assertInstanceOf(OpenSSLAsymmetricKey::class, $privateKey);
 
         openssl_pkey_export($privateKey, $privateKeyString);
@@ -89,7 +92,10 @@ class TesseraServiceProviderTest extends TestCase
      */
     public function testCanUseCryptoKeysFromLocalDisk(): void
     {
-        $privateKey = openssl_pkey_new();
+        $privateKey = openssl_pkey_new([
+            'private_key_type' => OPENSSL_KEYTYPE_RSA,
+            'private_key_bits' => 4096,
+        ]);
         $this->assertInstanceOf(OpenSSLAsymmetricKey::class, $privateKey);
 
         $keyFile = $this->keysPath . DIRECTORY_SEPARATOR . 'oauth-private.key';
@@ -130,7 +136,10 @@ class TesseraServiceProviderTest extends TestCase
      */
     protected function writeKeyPair(): void
     {
-        $privateKey = openssl_pkey_new();
+        $privateKey = openssl_pkey_new([
+            'private_key_type' => OPENSSL_KEYTYPE_RSA,
+            'private_key_bits' => 4096,
+        ]);
         $this->assertInstanceOf(OpenSSLAsymmetricKey::class, $privateKey);
 
         $privateFile = $this->keysPath . DIRECTORY_SEPARATOR . 'oauth-private.key';

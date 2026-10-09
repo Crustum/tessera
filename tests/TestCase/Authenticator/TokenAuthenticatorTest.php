@@ -17,8 +17,8 @@ use Crustum\Tessera\UserProvider;
 use Firebase\JWT\JWT;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use League\OAuth2\Server\ResourceServer;
-use Mockery;
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use JMac\Testing\Double;
+use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -26,7 +26,7 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class TokenAuthenticatorTest extends TestCase
 {
-    use MockeryPHPUnitIntegration;
+    use VerifiesDoubles;
 
     /**
      * @return void
@@ -54,28 +54,28 @@ class TokenAuthenticatorTest extends TestCase
      */
     public function testUserCanBePulledViaBearerToken(): void
     {
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $userProvider = Mockery::mock(UserProvider::class);
-        $clients = Mockery::mock(ClientRepository::class);
+        $resourceServer = Double::for(ResourceServer::class);
+        $userProvider = Double::for(UserProvider::class);
+        $clients = Double::for(ClientRepository::class);
 
         $request = (new ServerRequest())->withHeader('Authorization', 'Bearer token');
 
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
-        $psr = Mockery::mock(ServerRequestInterface::class);
-        $resourceServer->shouldReceive('validateAuthenticatedRequest')->andReturn($psr);
-        $psr->shouldReceive('getAttribute')->with('oauth_user_id')->andReturn(1);
-        $psr->shouldReceive('getAttribute')->with('oauth_client_id')->andReturn(1);
-        $psr->shouldReceive('getAttribute')->with('oauth_access_token_id')->andReturn('token');
-        $psr->shouldReceive('getAttributes')->andReturn([
+        $psr = Double::for(ServerRequestInterface::class);
+        $resourceServer->allows('validateAuthenticatedRequest')->returns($psr);
+        $psr->allows('getAttribute')->with('oauth_user_id')->returns(1);
+        $psr->allows('getAttribute')->with('oauth_client_id')->returns(1);
+        $psr->allows('getAttribute')->with('oauth_access_token_id')->returns('token');
+        $psr->allows('getAttributes')->returns([
             'oauth_user_id' => 1,
             'oauth_client_id' => 1,
             'oauth_access_token_id' => 'token',
             'oauth_scopes' => [],
         ]);
-        $userProvider->shouldReceive('retrieveById')->with(1)->andReturn(new TokenAuthenticatorTestUser());
-        $userProvider->shouldReceive('getProviderName')->andReturn('users');
-        $clients->shouldReceive('findActive')->with('1')->andReturn($this->makeClient());
+        $userProvider->allows('retrieveById')->with(1)->returns(new TokenAuthenticatorTestUser());
+        $userProvider->allows('getProviderName')->returns('users');
+        $clients->allows('findActive')->with('1')->returns($this->makeClient());
 
         $user = $authenticator->user($request);
 
@@ -88,26 +88,26 @@ class TokenAuthenticatorTest extends TestCase
      */
     public function testUserIsResolvedOnlyOnce(): void
     {
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $userProvider = Mockery::mock(UserProvider::class);
-        $clients = Mockery::mock(ClientRepository::class);
+        $resourceServer = Double::for(ResourceServer::class);
+        $userProvider = Double::for(UserProvider::class);
+        $clients = Double::for(ClientRepository::class);
         $request = (new ServerRequest())->withHeader('Authorization', 'Bearer token');
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
-        $psr = Mockery::mock(ServerRequestInterface::class);
-        $resourceServer->shouldReceive('validateAuthenticatedRequest')->once()->andReturn($psr);
-        $psr->shouldReceive('getAttribute')->with('oauth_user_id')->andReturn(1);
-        $psr->shouldReceive('getAttribute')->with('oauth_client_id')->andReturn(1);
-        $psr->shouldReceive('getAttribute')->with('oauth_access_token_id')->andReturn('token');
-        $psr->shouldReceive('getAttributes')->andReturn([
+        $psr = Double::for(ServerRequestInterface::class);
+        $resourceServer->expects('validateAuthenticatedRequest')->returns($psr);
+        $psr->allows('getAttribute')->with('oauth_user_id')->returns(1);
+        $psr->allows('getAttribute')->with('oauth_client_id')->returns(1);
+        $psr->allows('getAttribute')->with('oauth_access_token_id')->returns('token');
+        $psr->allows('getAttributes')->returns([
             'oauth_user_id' => 1,
             'oauth_client_id' => 1,
             'oauth_access_token_id' => 'token',
             'oauth_scopes' => [],
         ]);
-        $userProvider->shouldReceive('retrieveById')->once()->with(1)->andReturn(new TokenAuthenticatorTestUser());
-        $userProvider->shouldReceive('getProviderName')->andReturn('users');
-        $clients->shouldReceive('findActive')->with('1')->andReturn($this->makeClient());
+        $userProvider->expects('retrieveById')->with(1)->returns(new TokenAuthenticatorTestUser());
+        $userProvider->allows('getProviderName')->returns('users');
+        $clients->allows('findActive')->with('1')->returns($this->makeClient());
 
         $user = $authenticator->user($request);
         $user2 = $authenticator->user($request);
@@ -120,15 +120,14 @@ class TokenAuthenticatorTest extends TestCase
      */
     public function testNoUserWhenOauthThrowsException(): void
     {
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $userProvider = Mockery::mock(UserProvider::class);
-        $clients = Mockery::mock(ClientRepository::class);
+        $resourceServer = Double::for(ResourceServer::class);
+        $userProvider = Double::for(UserProvider::class);
+        $clients = Double::for(ClientRepository::class);
         $request = (new ServerRequest())->withHeader('Authorization', 'Bearer token');
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
-        $resourceServer->shouldReceive('validateAuthenticatedRequest')
-            ->once()
-            ->andThrow(new OAuthServerException('message', 500, 'error type'));
+        $resourceServer->expects('validateAuthenticatedRequest')
+            ->throws(new OAuthServerException('message', 500, 'error type'));
 
         $this->assertNull($authenticator->user($request));
         $this->assertNull($authenticator->user($request));
@@ -139,19 +138,19 @@ class TokenAuthenticatorTest extends TestCase
      */
     public function testNullWhenNoUserFound(): void
     {
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $userProvider = Mockery::mock(UserProvider::class);
-        $clients = Mockery::mock(ClientRepository::class);
+        $resourceServer = Double::for(ResourceServer::class);
+        $userProvider = Double::for(UserProvider::class);
+        $clients = Double::for(ClientRepository::class);
         $request = (new ServerRequest())->withHeader('Authorization', 'Bearer token');
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
-        $clients->shouldReceive('findActive')->with('1')->andReturn($this->makeClient());
-        $psr = Mockery::mock(ServerRequestInterface::class);
-        $resourceServer->shouldReceive('validateAuthenticatedRequest')->andReturn($psr);
-        $psr->shouldReceive('getAttribute')->with('oauth_user_id')->andReturn(1);
-        $psr->shouldReceive('getAttribute')->with('oauth_client_id')->andReturn(1);
-        $userProvider->shouldReceive('retrieveById')->with(1)->andReturn(null);
-        $userProvider->shouldReceive('getProviderName')->andReturn('users');
+        $clients->allows('findActive')->with('1')->returns($this->makeClient());
+        $psr = Double::for(ServerRequestInterface::class);
+        $resourceServer->allows('validateAuthenticatedRequest')->returns($psr);
+        $psr->allows('getAttribute')->with('oauth_user_id')->returns(1);
+        $psr->allows('getAttribute')->with('oauth_client_id')->returns(1);
+        $userProvider->allows('retrieveById')->with(1)->returns(null);
+        $userProvider->allows('getProviderName')->returns('users');
 
         $this->assertNull($authenticator->user($request));
     }
@@ -161,22 +160,22 @@ class TokenAuthenticatorTest extends TestCase
      */
     public function testNullForClientCredentialsToken(): void
     {
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $userProvider = Mockery::mock(UserProvider::class);
-        $clients = Mockery::mock(ClientRepository::class);
+        $resourceServer = Double::for(ResourceServer::class);
+        $userProvider = Double::for(UserProvider::class);
+        $clients = Double::for(ClientRepository::class);
         $clientId = '019c9d23-9763-7303-9bdb-3a0a6bf0ef90';
         $client = $this->makeClient(['client_credentials']);
-        $clients->shouldReceive('findActive')->with($clientId)->andReturn($client);
+        $clients->allows('findActive')->with($clientId)->returns($client);
 
         $request = (new ServerRequest())->withHeader('Authorization', 'Bearer token');
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
-        $psr = Mockery::mock(ServerRequestInterface::class);
-        $resourceServer->shouldReceive('validateAuthenticatedRequest')->andReturn($psr);
-        $psr->shouldReceive('getAttribute')->with('oauth_user_id')->andReturn($clientId);
-        $psr->shouldReceive('getAttribute')->with('oauth_client_id')->andReturn($clientId);
-        $userProvider->shouldReceive('getProviderName')->andReturn('users');
-        $userProvider->shouldReceive('retrieveById')->never();
+        $psr = Double::for(ServerRequestInterface::class);
+        $resourceServer->allows('validateAuthenticatedRequest')->returns($psr);
+        $psr->allows('getAttribute')->with('oauth_user_id')->returns($clientId);
+        $psr->allows('getAttribute')->with('oauth_client_id')->returns($clientId);
+        $userProvider->allows('getProviderName')->returns('users');
+        $userProvider->expects('retrieveById')->never();
 
         $this->assertNull($authenticator->user($request));
     }
@@ -189,10 +188,10 @@ class TokenAuthenticatorTest extends TestCase
         Tessera::withoutCookieEncryption();
         Tessera::encryptTokensUsing(fn (string $defaultKey): string => $defaultKey . '.mykey');
 
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $userProvider = Mockery::mock(UserProvider::class);
-        $clients = Mockery::mock(ClientRepository::class);
-        $clients->shouldReceive('findActive')->with('1')->andReturn($this->makeClient());
+        $resourceServer = Double::for(ResourceServer::class);
+        $userProvider = Double::for(UserProvider::class);
+        $clients = Double::for(ClientRepository::class);
+        $clients->allows('findActive')->with('1')->returns($this->makeClient());
 
         $jwt = JWT::encode([
             'sub' => 1,
@@ -207,8 +206,8 @@ class TokenAuthenticatorTest extends TestCase
 
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
         $expectedUser = new TokenAuthenticatorTestUser();
-        $userProvider->shouldReceive('retrieveById')->with(1)->andReturn($expectedUser);
-        $userProvider->shouldReceive('getProviderName')->andReturn('users');
+        $userProvider->allows('retrieveById')->with(1)->returns($expectedUser);
+        $userProvider->allows('getProviderName')->returns('users');
 
         $this->assertSame($expectedUser, $authenticator->user($request));
     }
@@ -218,27 +217,27 @@ class TokenAuthenticatorTest extends TestCase
      */
     public function testUserIsResolvedWhenUserIdMatchesClientId(): void
     {
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $userProvider = Mockery::mock(UserProvider::class);
-        $clients = Mockery::mock(ClientRepository::class);
-        $clients->shouldReceive('findActive')->with('1')->andReturn($this->makeClient());
+        $resourceServer = Double::for(ResourceServer::class);
+        $userProvider = Double::for(UserProvider::class);
+        $clients = Double::for(ClientRepository::class);
+        $clients->allows('findActive')->with('1')->returns($this->makeClient());
 
         $request = (new ServerRequest())->withHeader('Authorization', 'Bearer token');
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
-        $psr = Mockery::mock(ServerRequestInterface::class);
-        $resourceServer->shouldReceive('validateAuthenticatedRequest')->andReturn($psr);
-        $psr->shouldReceive('getAttribute')->with('oauth_user_id')->andReturn(1);
-        $psr->shouldReceive('getAttribute')->with('oauth_client_id')->andReturn(1);
-        $psr->shouldReceive('getAttribute')->with('oauth_access_token_id')->andReturn('token');
-        $psr->shouldReceive('getAttributes')->andReturn([
+        $psr = Double::for(ServerRequestInterface::class);
+        $resourceServer->allows('validateAuthenticatedRequest')->returns($psr);
+        $psr->allows('getAttribute')->with('oauth_user_id')->returns(1);
+        $psr->allows('getAttribute')->with('oauth_client_id')->returns(1);
+        $psr->allows('getAttribute')->with('oauth_access_token_id')->returns('token');
+        $psr->allows('getAttributes')->returns([
             'oauth_user_id' => 1,
             'oauth_client_id' => 1,
             'oauth_access_token_id' => 'token',
             'oauth_scopes' => [],
         ]);
-        $userProvider->shouldReceive('getProviderName')->andReturn('users');
-        $userProvider->shouldReceive('retrieveById')->with(1)->andReturn(new TokenAuthenticatorTestUser());
+        $userProvider->allows('getProviderName')->returns('users');
+        $userProvider->allows('retrieveById')->with(1)->returns(new TokenAuthenticatorTestUser());
 
         $user = $authenticator->user($request);
 
@@ -253,16 +252,16 @@ class TokenAuthenticatorTest extends TestCase
     {
         Tessera::withCookieEncryption();
 
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $userProvider = Mockery::mock(UserProvider::class);
-        $clients = Mockery::mock(ClientRepository::class);
-        $clients->shouldReceive('findActive')->with('1')->andReturn($this->makeClient());
+        $resourceServer = Double::for(ResourceServer::class);
+        $userProvider = Double::for(UserProvider::class);
+        $clients = Double::for(ClientRepository::class);
+        $clients->allows('findActive')->with('1')->returns($this->makeClient());
 
         $request = $this->makeCookieRequest('token');
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
         $expectedUser = new TokenAuthenticatorTestUser();
-        $userProvider->shouldReceive('retrieveById')->with(1)->andReturn($expectedUser);
-        $userProvider->shouldReceive('getProviderName')->andReturn('users');
+        $userProvider->allows('retrieveById')->with(1)->returns($expectedUser);
+        $userProvider->allows('getProviderName')->returns('users');
 
         $this->assertSame($expectedUser, $authenticator->user($request));
     }
@@ -274,16 +273,16 @@ class TokenAuthenticatorTest extends TestCase
     {
         Tessera::withCookieEncryption();
 
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $userProvider = Mockery::mock(UserProvider::class);
-        $clients = Mockery::mock(ClientRepository::class);
-        $clients->shouldReceive('findActive')->with('1')->andReturn($this->makeClient());
+        $resourceServer = Double::for(ResourceServer::class);
+        $userProvider = Double::for(UserProvider::class);
+        $clients = Double::for(ClientRepository::class);
+        $clients->allows('findActive')->with('1')->returns($this->makeClient());
 
         $request = $this->makeCookieRequest(null, Security::encrypt('token', Security::getSalt()));
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
         $expectedUser = new TokenAuthenticatorTestUser();
-        $userProvider->shouldReceive('retrieveById')->with(1)->andReturn($expectedUser);
-        $userProvider->shouldReceive('getProviderName')->andReturn('users');
+        $userProvider->allows('retrieveById')->with(1)->returns($expectedUser);
+        $userProvider->allows('getProviderName')->returns('users');
 
         $this->assertSame($expectedUser, $authenticator->user($request));
     }
@@ -295,13 +294,13 @@ class TokenAuthenticatorTest extends TestCase
     {
         Tessera::withCookieEncryption();
 
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $userProvider = Mockery::mock(UserProvider::class);
-        $clients = Mockery::mock(ClientRepository::class);
+        $resourceServer = Double::for(ResourceServer::class);
+        $userProvider = Double::for(UserProvider::class);
+        $clients = Double::for(ClientRepository::class);
         $request = $this->makeCookieRequest('wrong_token');
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
-        $userProvider->shouldReceive('retrieveById')->never();
+        $userProvider->expects('retrieveById')->never();
 
         $this->assertNull($authenticator->user($request));
     }
@@ -314,15 +313,15 @@ class TokenAuthenticatorTest extends TestCase
         Tessera::withCookieEncryption();
         Tessera::ignoreCsrfToken(false);
 
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $userProvider = Mockery::mock(UserProvider::class);
-        $clients = Mockery::mock(ClientRepository::class);
+        $resourceServer = Double::for(ResourceServer::class);
+        $userProvider = Double::for(UserProvider::class);
+        $clients = Double::for(ClientRepository::class);
         $request = $this->makeCookieRequest(null, null, [
             'csrf' => '',
         ]);
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
-        $userProvider->shouldReceive('retrieveById')->never();
+        $userProvider->expects('retrieveById')->never();
 
         $this->assertNull($authenticator->user($request));
     }
@@ -336,9 +335,9 @@ class TokenAuthenticatorTest extends TestCase
         Tessera::$actingAsUser = new TokenAuthenticatorTestUser();
 
         try {
-            $resourceServer = Mockery::mock(ResourceServer::class);
-            $userProvider = Mockery::mock(UserProvider::class);
-            $clients = Mockery::mock(ClientRepository::class);
+            $resourceServer = Double::for(ResourceServer::class);
+            $userProvider = Double::for(UserProvider::class);
+            $clients = Double::for(ClientRepository::class);
             $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
             $this->assertNull($authenticator->user(new ServerRequest()));
@@ -355,16 +354,16 @@ class TokenAuthenticatorTest extends TestCase
     {
         Tessera::withCookieEncryption();
 
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $userProvider = Mockery::mock(UserProvider::class);
-        $clients = Mockery::mock(ClientRepository::class);
+        $resourceServer = Double::for(ResourceServer::class);
+        $userProvider = Double::for(UserProvider::class);
+        $clients = Double::for(ClientRepository::class);
         $request = $this->makeCookieRequest(
             null,
             Security::encrypt('wrong_token', Security::getSalt()),
         );
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
-        $userProvider->shouldReceive('retrieveById')->never();
+        $userProvider->expects('retrieveById')->never();
 
         $this->assertNull($authenticator->user($request));
     }
@@ -377,16 +376,16 @@ class TokenAuthenticatorTest extends TestCase
         Tessera::withCookieEncryption();
         Tessera::encryptTokensUsing(fn (string $defaultKey): string => $defaultKey . '.mykey');
 
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $userProvider = Mockery::mock(UserProvider::class);
-        $clients = Mockery::mock(ClientRepository::class);
-        $clients->shouldReceive('findActive')->with('1')->andReturn($this->makeClient());
+        $resourceServer = Double::for(ResourceServer::class);
+        $userProvider = Double::for(UserProvider::class);
+        $clients = Double::for(ClientRepository::class);
+        $clients->allows('findActive')->with('1')->returns($this->makeClient());
 
         $request = $this->makeCookieRequest(null, Security::encrypt('token', Security::getSalt()));
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
         $expectedUser = new TokenAuthenticatorTestUser();
-        $userProvider->shouldReceive('retrieveById')->with(1)->andReturn($expectedUser);
-        $userProvider->shouldReceive('getProviderName')->andReturn('users');
+        $userProvider->allows('retrieveById')->with(1)->returns($expectedUser);
+        $userProvider->allows('getProviderName')->returns('users');
 
         $this->assertSame($expectedUser, $authenticator->user($request));
     }
@@ -398,9 +397,9 @@ class TokenAuthenticatorTest extends TestCase
     {
         Tessera::withCookieEncryption();
 
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $userProvider = Mockery::mock(UserProvider::class);
-        $clients = Mockery::mock(ClientRepository::class);
+        $resourceServer = Double::for(ResourceServer::class);
+        $userProvider = Double::for(UserProvider::class);
+        $clients = Double::for(ClientRepository::class);
         $request = (new ServerRequest([
             'cookies' => [
                 'XSRF-TOKEN' => Security::encrypt('token', Security::getSalt()),
@@ -414,7 +413,7 @@ class TokenAuthenticatorTest extends TestCase
         ]));
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
-        $userProvider->shouldReceive('retrieveById')->never();
+        $userProvider->expects('retrieveById')->never();
 
         $this->assertNull($authenticator->user($request));
     }
@@ -426,9 +425,9 @@ class TokenAuthenticatorTest extends TestCase
     {
         Tessera::withCookieEncryption();
 
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $userProvider = Mockery::mock(UserProvider::class);
-        $clients = Mockery::mock(ClientRepository::class);
+        $resourceServer = Double::for(ResourceServer::class);
+        $userProvider = Double::for(UserProvider::class);
+        $clients = Double::for(ClientRepository::class);
         $request = $this->makeCookieRequest('token', null, [
             'sub' => 1,
             'aud' => 1,
@@ -437,7 +436,7 @@ class TokenAuthenticatorTest extends TestCase
         ]);
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
-        $userProvider->shouldReceive('retrieveById')->never();
+        $userProvider->expects('retrieveById')->never();
 
         $this->assertNull($authenticator->user($request));
     }
@@ -450,10 +449,10 @@ class TokenAuthenticatorTest extends TestCase
         Tessera::withCookieEncryption();
         Tessera::ignoreCsrfToken();
 
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $userProvider = Mockery::mock(UserProvider::class);
-        $clients = Mockery::mock(ClientRepository::class);
-        $clients->shouldReceive('findActive')->with('1')->andReturn($this->makeClient());
+        $resourceServer = Double::for(ResourceServer::class);
+        $userProvider = Double::for(UserProvider::class);
+        $clients = Double::for(ClientRepository::class);
+        $clients->allows('findActive')->with('1')->returns($this->makeClient());
 
         $request = (new ServerRequest([
             'cookies' => [
@@ -466,8 +465,8 @@ class TokenAuthenticatorTest extends TestCase
         ]));
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
         $expectedUser = new TokenAuthenticatorTestUser();
-        $userProvider->shouldReceive('retrieveById')->with(1)->andReturn($expectedUser);
-        $userProvider->shouldReceive('getProviderName')->andReturn('users');
+        $userProvider->allows('retrieveById')->with(1)->returns($expectedUser);
+        $userProvider->allows('getProviderName')->returns('users');
 
         $this->assertSame($expectedUser, $authenticator->user($request));
     }
@@ -477,16 +476,16 @@ class TokenAuthenticatorTest extends TestCase
      */
     public function testClientCanBePulledViaBearerToken(): void
     {
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $userProvider = Mockery::mock(UserProvider::class);
-        $clients = Mockery::mock(ClientRepository::class);
+        $resourceServer = Double::for(ResourceServer::class);
+        $userProvider = Double::for(UserProvider::class);
+        $clients = Double::for(ClientRepository::class);
         $request = (new ServerRequest())->withHeader('Authorization', 'Bearer token');
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
-        $psr = Mockery::mock(ServerRequestInterface::class);
-        $resourceServer->shouldReceive('validateAuthenticatedRequest')->andReturn($psr);
-        $psr->shouldReceive('getAttribute')->with('oauth_client_id')->andReturn(1);
-        $clients->shouldReceive('findActive')->with('1')->andReturn($this->makeClient());
+        $psr = Double::for(ServerRequestInterface::class);
+        $resourceServer->allows('validateAuthenticatedRequest')->returns($psr);
+        $psr->allows('getAttribute')->with('oauth_client_id')->returns(1);
+        $clients->allows('findActive')->with('1')->returns($this->makeClient());
 
         $client = $authenticator->client($request);
 
@@ -498,20 +497,18 @@ class TokenAuthenticatorTest extends TestCase
      */
     public function testClientIsResolvedOnlyOnce(): void
     {
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $userProvider = Mockery::mock(UserProvider::class);
-        $clients = Mockery::mock(ClientRepository::class);
+        $resourceServer = Double::for(ResourceServer::class);
+        $userProvider = Double::for(UserProvider::class);
+        $clients = Double::for(ClientRepository::class);
         $request = (new ServerRequest())->withHeader('Authorization', 'Bearer token');
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
-        $psr = Mockery::mock(ServerRequestInterface::class);
-        $resourceServer->shouldReceive('validateAuthenticatedRequest')->andReturn($psr);
-        $psr->shouldReceive('getAttribute')->with('oauth_client_id')->andReturn(1);
-        $clients->shouldReceive('findActive')->with('1')->andReturn($this->makeClient());
+        $psr = Double::for(ServerRequestInterface::class);
+        $resourceServer->allows('validateAuthenticatedRequest')->returns($psr);
+        $psr->allows('getAttribute')->with('oauth_client_id')->returns(1);
+        $clients->expects('findActive')->with('1')->returns($this->makeClient());
 
         $client = $authenticator->client($request);
-
-        $clients->shouldReceive('findActive')->never();
 
         $client2 = $authenticator->client();
 
@@ -524,14 +521,14 @@ class TokenAuthenticatorTest extends TestCase
      */
     public function testNoClientIsReturnedWhenOauthThrowsException(): void
     {
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $userProvider = Mockery::mock(UserProvider::class);
-        $clients = Mockery::mock(ClientRepository::class);
+        $resourceServer = Double::for(ResourceServer::class);
+        $userProvider = Double::for(UserProvider::class);
+        $clients = Double::for(ClientRepository::class);
         $request = (new ServerRequest())->withHeader('Authorization', 'Bearer token');
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
-        $resourceServer->shouldReceive('validateAuthenticatedRequest')
-            ->andThrow(new OAuthServerException('message', 500, 'error type'));
+        $resourceServer->allows('validateAuthenticatedRequest')
+            ->throws(new OAuthServerException('message', 500, 'error type'));
 
         $this->assertNull($authenticator->client($request));
         $this->assertNull($authenticator->client($request));
@@ -542,16 +539,16 @@ class TokenAuthenticatorTest extends TestCase
      */
     public function testNullIsReturnedIfNoClientIsFound(): void
     {
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $userProvider = Mockery::mock(UserProvider::class);
-        $clients = Mockery::mock(ClientRepository::class);
+        $resourceServer = Double::for(ResourceServer::class);
+        $userProvider = Double::for(UserProvider::class);
+        $clients = Double::for(ClientRepository::class);
         $request = (new ServerRequest())->withHeader('Authorization', 'Bearer token');
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
-        $psr = Mockery::mock(ServerRequestInterface::class);
-        $resourceServer->shouldReceive('validateAuthenticatedRequest')->andReturn($psr);
-        $psr->shouldReceive('getAttribute')->with('oauth_client_id')->andReturn(1);
-        $clients->shouldReceive('findActive')->with('1')->andReturn(null);
+        $psr = Double::for(ServerRequestInterface::class);
+        $resourceServer->allows('validateAuthenticatedRequest')->returns($psr);
+        $psr->allows('getAttribute')->with('oauth_client_id')->returns(1);
+        $clients->allows('findActive')->with('1')->returns(null);
 
         $this->assertNull($authenticator->client($request));
     }
@@ -563,13 +560,13 @@ class TokenAuthenticatorTest extends TestCase
     {
         Tessera::withCookieEncryption();
 
-        $resourceServer = Mockery::mock(ResourceServer::class);
-        $userProvider = Mockery::mock(UserProvider::class);
-        $clients = Mockery::mock(ClientRepository::class);
+        $resourceServer = Double::for(ResourceServer::class);
+        $userProvider = Double::for(UserProvider::class);
+        $clients = Double::for(ClientRepository::class);
         $request = $this->makeCookieRequest('token');
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
         $expectedClient = $this->makeClient();
-        $clients->shouldReceive('findActive')->with('1')->andReturn($expectedClient);
+        $clients->allows('findActive')->with('1')->returns($expectedClient);
 
         $client = $authenticator->client($request);
 
@@ -645,7 +642,7 @@ class TokenAuthenticatorTest extends TestCase
         UserProvider $users,
         ClientRepository $clients,
     ): TokenAuthenticator {
-        $identifier = Mockery::mock(IdentifierInterface::class);
+        $identifier = Double::for(IdentifierInterface::class);
 
         return new TokenAuthenticator($identifier, [
             'server' => $server,

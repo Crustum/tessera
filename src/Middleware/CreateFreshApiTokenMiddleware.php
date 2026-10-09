@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Crustum\Tessera\Middleware;
 
+use Authentication\IdentityInterface;
+use Cake\Http\Response as CakeResponse;
 use Crustum\Tessera\ApiTokenCookieFactory;
 use Crustum\Tessera\Contracts\OAuthenticatable;
 use Crustum\Tessera\Tessera;
@@ -35,7 +37,7 @@ class CreateFreshApiTokenMiddleware implements MiddlewareInterface
             return $response;
         }
 
-        $identity = $request->getAttribute('identity');
+        $identity = $this->oauthUserFromIdentity($request->getAttribute('identity'));
         if (!$identity instanceof OAuthenticatable) {
             return $response;
         }
@@ -65,8 +67,44 @@ class CreateFreshApiTokenMiddleware implements MiddlewareInterface
     protected function shouldReceiveFreshToken(ServerRequestInterface $request, ResponseInterface $response): bool
     {
         return strtoupper($request->getMethod()) === 'GET'
-            && $request->getAttribute('identity') instanceof OAuthenticatable
+            && $this->oauthUserFromIdentity($request->getAttribute('identity')) instanceof OAuthenticatable
+            && !$this->isRedirect($response)
             && !$this->alreadyContainsToken($response);
+    }
+
+    /**
+     * Whether the response is a redirect that must not carry a fresh token.
+     *
+     * @param \Psr\Http\Message\ResponseInterface $response Response produced by the rest of the queue
+     * @return bool
+     */
+    protected function isRedirect(ResponseInterface $response): bool
+    {
+        $status = $response->getStatusCode();
+
+        return $status >= 300 && $status < 400;
+    }
+
+    /**
+     * Unwrap Cake Authentication identity to an OAuthenticatable user when present.
+     *
+     * @param mixed $identity Request identity attribute
+     * @return \Crustum\Tessera\Contracts\OAuthenticatable|null
+     */
+    protected function oauthUserFromIdentity(mixed $identity): ?OAuthenticatable
+    {
+        if ($identity instanceof OAuthenticatable) {
+            return $identity;
+        }
+
+        if ($identity instanceof IdentityInterface) {
+            $data = $identity->getOriginalData();
+            if ($data instanceof OAuthenticatable) {
+                return $data;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -77,6 +115,10 @@ class CreateFreshApiTokenMiddleware implements MiddlewareInterface
      */
     protected function alreadyContainsToken(ResponseInterface $response): bool
     {
+        if ($response instanceof CakeResponse && $response->getCookie(Tessera::cookie()) !== null) {
+            return true;
+        }
+
         $prefix = Tessera::cookie() . '=';
         foreach ($response->getHeader('Set-Cookie') as $cookieHeader) {
             if (str_starts_with($cookieHeader, $prefix)) {

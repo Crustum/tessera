@@ -130,7 +130,7 @@ class TesseraServiceProvider extends ServiceProvider
 
             $server->enableGrantType(
                 new ClientCredentialsGrant(),
-                Tessera::clientCredentialsTokensExpireIn() ?? Tessera::tokensExpireIn(),
+                Tessera::clientCredentialsTokensExpireIn(),
             );
 
             if (Tessera::$implicitGrantEnabled) {

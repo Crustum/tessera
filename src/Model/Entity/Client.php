@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Crustum\Tessera\Model\Entity;
 
 use Cake\ORM\Entity;
+use Cake\Validation\Validation;
 use Crustum\Tessera\Trait\ResolvesInheritedScopesTrait;
 
 /**
@@ -142,6 +143,21 @@ class Client extends Entity
     public function firstParty(): bool
     {
         return empty($this->owner_id);
+    }
+
+    /**
+     * Whether the given value is a valid client identifier for this model.
+     *
+     * Defaults to UUID validation. Hosts using another key type (e.g. ULIDs)
+     * override this in their client model (wired via `Tessera::useClientModel()`)
+     * so `ClientRepository::find()` rejects malformed IDs without querying.
+     *
+     * @param string|int $id Client identifier
+     * @return bool
+     */
+    public function isValidUniqueId(string|int $id): bool
+    {
+        return Validation::uuid((string)$id);
     }
 
     /**

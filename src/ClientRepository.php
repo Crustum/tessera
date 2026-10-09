@@ -24,6 +24,10 @@ class ClientRepository
      */
     public function find(string|int $id): ?Client
     {
+        if (Tessera::$clientUuids && !Tessera::client()->isValidUniqueId($id)) {
+            return null;
+        }
+
         /** @var \Crustum\Tessera\Model\Entity\Client|null $client */
         $client = Tessera::clientsTable()->find()
             ->where(['id' => $id])
@@ -42,7 +46,7 @@ class ClientRepository
     {
         $client = $this->find($id);
 
-        return $client && !$client->revoked ? $client : null;
+        return $client instanceof Client && !$client->revoked ? $client : null;
     }
 
     /**
@@ -58,7 +62,7 @@ class ClientRepository
         $client = Tessera::clientsTable()->find()
             ->where([
                 'id' => $clientId,
-                'owner_id' => $user->getIdentifier(),
+                $this->ownerColumn() => $user->getIdentifier(),
                 'revoked' => false,
             ])
             ->first();
@@ -77,7 +81,7 @@ class ClientRepository
         /** @var list<\Crustum\Tessera\Model\Entity\Client> $clients */
         $clients = Tessera::clientsTable()->find()
             ->where([
-                'owner_id' => $user->getIdentifier(),
+                $this->ownerColumn() => $user->getIdentifier(),
                 'revoked' => false,
             ])
             ->orderBy(['name' => 'ASC'])
@@ -85,6 +89,19 @@ class ClientRepository
             ->toList();
 
         return $clients;
+    }
+
+    /**
+     * Resolve the owner column for client lookups, supporting the legacy `user_id` column.
+     *
+     * @return string
+     */
+    protected function ownerColumn(): string
+    {
+        $schema = Tessera::clientsTable()->getSchema();
+        $column = $schema->getColumn('user_id');
+
+        return $column !== null ? 'user_id' : 'owner_id';
     }
 
     /**

@@ -9,8 +9,8 @@ use Crustum\Tessera\ApiTokenCookieFactory;
 use Crustum\Tessera\Contracts\OAuthenticatable;
 use Crustum\Tessera\Controller\TransientTokenController;
 use Crustum\Tessera\Exception\AuthenticationException;
-use Mockery;
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use JMac\Testing\Double;
+use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
 use Symfony\Component\HttpFoundation\Cookie;
 
 /**
@@ -18,18 +18,18 @@ use Symfony\Component\HttpFoundation\Cookie;
  */
 class TransientTokenControllerTest extends TestCase
 {
-    use MockeryPHPUnitIntegration;
+    use VerifiesDoubles;
 
     /**
      * @return void
      */
     public function testTokenCanBeRefreshed(): void
     {
-        $cookieFactory = Mockery::mock(ApiTokenCookieFactory::class);
-        $cookieFactory->shouldReceive('make')->once()->with(1, 'token')->andReturn(new Cookie('cookie', 'value'));
+        $cookieFactory = Double::for(ApiTokenCookieFactory::class);
+        $cookieFactory->expects('make')->with(1, 'token')->returns(new Cookie('cookie', 'value'));
 
-        $user = Mockery::mock(OAuthenticatable::class);
-        $user->shouldReceive('getIdentifier')->andReturn(1);
+        $user = Double::for(OAuthenticatable::class);
+        $user->allows('getIdentifier')->returns(1);
 
         $request = (new ServerRequest())
             ->withAttribute('identity', $user)
@@ -49,11 +49,11 @@ class TransientTokenControllerTest extends TestCase
      */
     public function testRefreshFailsWhenCsrfAttributeMissing(): void
     {
-        $cookieFactory = Mockery::mock(ApiTokenCookieFactory::class);
-        $cookieFactory->shouldReceive('make')->never();
+        $cookieFactory = Double::for(ApiTokenCookieFactory::class);
+        $cookieFactory->expects('make')->never();
 
-        $user = Mockery::mock(OAuthenticatable::class);
-        $user->shouldReceive('getIdentifier')->andReturn(1);
+        $user = Double::for(OAuthenticatable::class);
+        $user->allows('getIdentifier')->returns(1);
 
         $request = (new ServerRequest())->withAttribute('identity', $user);
 

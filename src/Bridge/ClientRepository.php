@@ -44,7 +44,7 @@ class ClientRepository implements ClientRepositoryInterface
     {
         $record = $this->clients->findActive($clientIdentifier);
 
-        return $record
+        return $record instanceof ClientModel
             && $clientSecret !== null
             && $clientSecret !== ''
             && $this->hasher->check($clientSecret, (string)$record->get('secret'));

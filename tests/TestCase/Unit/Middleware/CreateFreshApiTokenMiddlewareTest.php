@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Crustum\Tessera\Test\TestCase\Unit\Middleware;
 
+use Authentication\Identity;
 use Cake\Http\Response;
 use Cake\Http\ServerRequest;
 use Cake\TestSuite\TestCase;
@@ -10,29 +11,30 @@ use Crustum\Tessera\ApiTokenCookieFactory;
 use Crustum\Tessera\Contracts\OAuthenticatable;
 use Crustum\Tessera\Middleware\CreateFreshApiTokenMiddleware;
 use Crustum\Tessera\Tessera;
-use Mockery;
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use JMac\Testing\Double;
+use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Symfony\Component\HttpFoundation\Cookie;
+use TestApp\Model\Entity\User;
 
 /**
  * CreateFreshApiTokenMiddleware unit tests.
  */
 class CreateFreshApiTokenMiddlewareTest extends TestCase
 {
-    use MockeryPHPUnitIntegration;
+    use VerifiesDoubles;
 
     /**
      * @return void
      */
     public function testShouldReceiveAFreshToken(): void
     {
-        $cookieFactory = Mockery::mock(ApiTokenCookieFactory::class);
+        $cookieFactory = Double::for(ApiTokenCookieFactory::class);
         $middleware = new CreateFreshApiTokenMiddleware($cookieFactory);
 
-        $user = Mockery::mock(OAuthenticatable::class);
-        $user->shouldReceive('getIdentifier')->andReturn(1);
+        $user = Double::for(OAuthenticatable::class);
+        $user->allows('getIdentifier')->returns(1);
 
         $request = (new ServerRequest([
             'environment' => ['REQUEST_METHOD' => 'GET'],
@@ -41,10 +43,9 @@ class CreateFreshApiTokenMiddlewareTest extends TestCase
             ->withAttribute('csrfToken', 't0k3n');
 
         $response = new Response();
-        $cookieFactory->shouldReceive('make')
+        $cookieFactory->expects('make')
             ->with(1, 't0k3n')
-            ->once()
-            ->andReturn(new Cookie(Tessera::cookie()));
+            ->returns(new Cookie(Tessera::cookie()));
 
         $result = $middleware->process($request, $this->makeHandler($response));
 
@@ -56,18 +57,18 @@ class CreateFreshApiTokenMiddlewareTest extends TestCase
      */
     public function testShouldNotReceiveAFreshTokenWhenCsrfAttributeMissing(): void
     {
-        $cookieFactory = Mockery::mock(ApiTokenCookieFactory::class);
+        $cookieFactory = Double::for(ApiTokenCookieFactory::class);
         $middleware = new CreateFreshApiTokenMiddleware($cookieFactory);
 
-        $user = Mockery::mock(OAuthenticatable::class);
-        $user->shouldReceive('getIdentifier')->andReturn(1);
+        $user = Double::for(OAuthenticatable::class);
+        $user->allows('getIdentifier')->returns(1);
 
         $request = (new ServerRequest([
             'environment' => ['REQUEST_METHOD' => 'GET'],
         ]))->withAttribute('identity', $user);
 
         $response = new Response();
-        $cookieFactory->shouldReceive('make')->never();
+        $cookieFactory->expects('make')->never();
 
         $result = $middleware->process($request, $this->makeHandler($response));
 
@@ -80,11 +81,11 @@ class CreateFreshApiTokenMiddlewareTest extends TestCase
      */
     public function testShouldNotReceiveAFreshTokenWhenCsrfAttributeEmpty(): void
     {
-        $cookieFactory = Mockery::mock(ApiTokenCookieFactory::class);
+        $cookieFactory = Double::for(ApiTokenCookieFactory::class);
         $middleware = new CreateFreshApiTokenMiddleware($cookieFactory);
 
-        $user = Mockery::mock(OAuthenticatable::class);
-        $user->shouldReceive('getIdentifier')->andReturn(1);
+        $user = Double::for(OAuthenticatable::class);
+        $user->allows('getIdentifier')->returns(1);
 
         $request = (new ServerRequest([
             'environment' => ['REQUEST_METHOD' => 'GET'],
@@ -93,7 +94,7 @@ class CreateFreshApiTokenMiddlewareTest extends TestCase
             ->withAttribute('csrfToken', '');
 
         $response = new Response();
-        $cookieFactory->shouldReceive('make')->never();
+        $cookieFactory->expects('make')->never();
 
         $result = $middleware->process($request, $this->makeHandler($response));
 
@@ -106,7 +107,7 @@ class CreateFreshApiTokenMiddlewareTest extends TestCase
      */
     public function testShouldNotReceiveAFreshTokenForOtherHttpVerbs(): void
     {
-        $cookieFactory = Mockery::mock(ApiTokenCookieFactory::class);
+        $cookieFactory = Double::for(ApiTokenCookieFactory::class);
         $middleware = new CreateFreshApiTokenMiddleware($cookieFactory);
         $request = new ServerRequest([
             'environment' => ['REQUEST_METHOD' => 'POST'],
@@ -124,7 +125,7 @@ class CreateFreshApiTokenMiddlewareTest extends TestCase
      */
     public function testShouldNotReceiveAFreshTokenForAnInvalidUser(): void
     {
-        $cookieFactory = Mockery::mock(ApiTokenCookieFactory::class);
+        $cookieFactory = Double::for(ApiTokenCookieFactory::class);
         $middleware = new CreateFreshApiTokenMiddleware($cookieFactory);
         $request = new ServerRequest([
             'environment' => ['REQUEST_METHOD' => 'GET'],
@@ -142,11 +143,11 @@ class CreateFreshApiTokenMiddlewareTest extends TestCase
      */
     public function testShouldNotReceiveAFreshTokenForResponseThatAlreadyHasToken(): void
     {
-        $cookieFactory = Mockery::mock(ApiTokenCookieFactory::class);
+        $cookieFactory = Double::for(ApiTokenCookieFactory::class);
         $middleware = new CreateFreshApiTokenMiddleware($cookieFactory);
 
-        $user = Mockery::mock(OAuthenticatable::class);
-        $user->shouldReceive('getIdentifier')->andReturn(1);
+        $user = Double::for(OAuthenticatable::class);
+        $user->allows('getIdentifier')->returns(1);
 
         $request = (new ServerRequest([
             'environment' => ['REQUEST_METHOD' => 'GET'],
@@ -157,6 +158,30 @@ class CreateFreshApiTokenMiddlewareTest extends TestCase
         $result = $middleware->process($request, $this->makeHandler($response));
 
         $this->assertSame($response, $result);
+        $this->assertTrue($this->hasTesseraCookie($result));
+    }
+
+    /**
+     * @return void
+     */
+    public function testShouldReceiveAFreshTokenForWrappedAuthenticationIdentity(): void
+    {
+        $cookieFactory = Double::for(ApiTokenCookieFactory::class);
+        $middleware = new CreateFreshApiTokenMiddleware($cookieFactory);
+
+        $request = (new ServerRequest([
+            'environment' => ['REQUEST_METHOD' => 'GET'],
+        ]))
+            ->withAttribute('identity', new Identity(new User(['id' => 1], ['markNew' => false])))
+            ->withAttribute('csrfToken', 't0k3n');
+
+        $response = new Response();
+        $cookieFactory->expects('make')
+            ->with(1, 't0k3n')
+            ->returns(new Cookie(Tessera::cookie()));
+
+        $result = $middleware->process($request, $this->makeHandler($response));
+
         $this->assertTrue($this->hasTesseraCookie($result));
     }
 
@@ -184,8 +209,8 @@ class CreateFreshApiTokenMiddlewareTest extends TestCase
      */
     protected function makeHandler(ResponseInterface $response): RequestHandlerInterface
     {
-        $handler = Mockery::mock(RequestHandlerInterface::class);
-        $handler->shouldReceive('handle')->once()->andReturn($response);
+        $handler = Double::for(RequestHandlerInterface::class);
+        $handler->expects('handle')->returns($response);
 
         return $handler;
     }

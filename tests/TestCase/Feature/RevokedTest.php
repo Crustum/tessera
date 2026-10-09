@@ -3,7 +3,8 @@ declare(strict_types=1);
 
 namespace Crustum\Tessera\Test\TestCase\Feature;
 
-use Cake\Event\EventManagerInterface;
+use Cake\Event\EventInterface;
+use Cake\Event\EventManager;
 use Cake\TestSuite\TestCase;
 use Crustum\Tessera\Bridge\AccessToken;
 use Crustum\Tessera\Bridge\AccessTokenRepository;
@@ -14,17 +15,16 @@ use Crustum\Tessera\Bridge\DeviceCode;
 use Crustum\Tessera\Bridge\DeviceCodeRepository;
 use Crustum\Tessera\Bridge\RefreshToken;
 use Crustum\Tessera\Bridge\RefreshTokenRepository;
+use Crustum\Tessera\Event\AccessTokenCreatedEvent;
+use Crustum\Tessera\Event\AccessTokenRevokedEvent;
+use Crustum\Tessera\Event\RefreshTokenCreatedEvent;
 use DateTimeImmutable;
-use Mockery;
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 
 /**
  * Bridge repository revoked-state Feature coverage.
  */
 class RevokedTest extends TestCase
 {
-    use MockeryPHPUnitIntegration;
-
     private const CLIENT_ID = '019c9d23-9763-7303-9bdb-3a0a6bf0ef90';
 
     private const TOKEN_ID = 'token-id-001';
@@ -32,6 +32,11 @@ class RevokedTest extends TestCase
     private const ACCESS_TOKEN_ID = 'access-token-id-001';
 
     private const DEVICE_CODE_ID = 'device-code-id-001';
+
+    /**
+     * @var list<object>
+     */
+    protected array $dispatched = [];
 
     /**
      * @return void
@@ -44,6 +49,14 @@ class RevokedTest extends TestCase
         $repository->revokeAccessToken(self::TOKEN_ID);
 
         $this->assertTrue($repository->isAccessTokenRevoked(self::TOKEN_ID));
+
+        $created = $this->dispatchedEvent(AccessTokenCreatedEvent::class);
+        $this->assertSame(self::TOKEN_ID, $created->getTokenId());
+        $this->assertSame('1', $created->getUserId());
+        $this->assertSame(self::CLIENT_ID, $created->getClientId());
+
+        $revoked = $this->dispatchedEvent(AccessTokenRevokedEvent::class);
+        $this->assertSame(self::TOKEN_ID, $revoked->getTokenId());
     }
 
     /**
@@ -65,6 +78,8 @@ class RevokedTest extends TestCase
         $this->persistNewAccessToken($repository, self::TOKEN_ID);
 
         $this->assertFalse($repository->isAccessTokenRevoked(self::TOKEN_ID));
+        $this->assertNotNull($this->dispatchedEvent(AccessTokenCreatedEvent::class));
+        $this->assertNull($this->findDispatchedEvent(AccessTokenRevokedEvent::class));
     }
 
     /**
@@ -112,6 +127,10 @@ class RevokedTest extends TestCase
         $repository->revokeRefreshToken(self::TOKEN_ID);
 
         $this->assertTrue($repository->isRefreshTokenRevoked(self::TOKEN_ID));
+
+        $created = $this->dispatchedEvent(RefreshTokenCreatedEvent::class);
+        $this->assertSame(self::TOKEN_ID, $created->getRefreshTokenId());
+        $this->assertSame(self::ACCESS_TOKEN_ID, $created->getAccessTokenId());
     }
 
     /**
@@ -133,6 +152,7 @@ class RevokedTest extends TestCase
         $this->persistNewRefreshToken($repository, self::TOKEN_ID);
 
         $this->assertFalse($repository->isRefreshTokenRevoked(self::TOKEN_ID));
+        $this->assertNotNull($this->dispatchedEvent(RefreshTokenCreatedEvent::class));
     }
 
     /**
@@ -174,10 +194,10 @@ class RevokedTest extends TestCase
      */
     protected function accessTokenRepository(): AccessTokenRepository
     {
-        $events = Mockery::mock(EventManagerInterface::class);
-        $events->shouldReceive('dispatch');
-
-        return new AccessTokenRepository($events);
+        return new AccessTokenRepository($this->eventManager([
+            AccessTokenCreatedEvent::NAME,
+            AccessTokenRevokedEvent::NAME,
+        ]));
     }
 
     /**
@@ -223,10 +243,9 @@ class RevokedTest extends TestCase
      */
     protected function refreshTokenRepository(): RefreshTokenRepository
     {
-        $events = Mockery::mock(EventManagerInterface::class);
-        $events->shouldReceive('dispatch');
-
-        return new RefreshTokenRepository($events);
+        return new RefreshTokenRepository($this->eventManager([
+            RefreshTokenCreatedEvent::NAME,
+        ]));
     }
 
     /**
@@ -245,6 +264,59 @@ class RevokedTest extends TestCase
         $refreshToken->setExpiryDateTime(new DateTimeImmutable());
 
         $repository->persistNewRefreshToken($refreshToken);
+    }
+
+    /**
+     * Build an event manager capturing the given lifecycle events.
+     *
+     * @param list<string> $names Event names
+     * @return \Cake\Event\EventManager
+     */
+    protected function eventManager(array $names): EventManager
+    {
+        $this->dispatched = [];
+
+        $events = new EventManager();
+        foreach ($names as $name) {
+            $events->on($name, function (EventInterface $event): void {
+                $this->dispatched[] = $event;
+            });
+        }
+
+        return $events;
+    }
+
+    /**
+     * Find the first captured event of the given class.
+     *
+     * @template T of object
+     * @param class-string<T> $class Event class
+     * @return T|null
+     */
+    protected function findDispatchedEvent(string $class): ?object
+    {
+        foreach ($this->dispatched as $event) {
+            if ($event instanceof $class) {
+                return $event;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Find the first captured event of the given class, failing when absent.
+     *
+     * @template T of object
+     * @param class-string<T> $class Event class
+     * @return T
+     */
+    protected function dispatchedEvent(string $class): object
+    {
+        $event = $this->findDispatchedEvent($class);
+        $this->assertNotNull($event, sprintf('Expected %s to have been dispatched.', $class));
+
+        return $event;
     }
 
     /**

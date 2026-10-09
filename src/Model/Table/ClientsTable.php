@@ -9,7 +9,7 @@ use Cake\Event\EventInterface;
 use Cake\ORM\Table;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
-use Crustum\Tessera\Model\Entity\Client;
+use Crustum\Tessera\Tessera;
 
 /**
  * OAuth clients table.
@@ -33,7 +33,7 @@ class ClientsTable extends Table
         $this->setTable('oauth_clients');
         $this->setDisplayField('name');
         $this->setPrimaryKey('id');
-        $this->setEntityClass(Client::class);
+        $this->setEntityClass(Tessera::clientModel());
 
         $this->addBehavior('Timestamp');
 

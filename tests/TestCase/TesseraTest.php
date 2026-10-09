@@ -11,6 +11,7 @@ use Crustum\Tessera\Model\Entity\RefreshToken;
 use Crustum\Tessera\Model\Entity\Token;
 use Crustum\Tessera\Tessera;
 use Crustum\Tessera\Test\TestCase\Authenticator\TokenAuthenticatorTestUser;
+use DateInterval;
 use RuntimeException;
 
 /**
@@ -116,5 +117,27 @@ class TesseraTest extends TestCase
             Tessera::allowActingAs(true);
             Tessera::clearActingAs();
         }
+    }
+
+    /**
+     * @return void
+     */
+    public function testClientCredentialsTokensExpireInFallsBackToTokensExpireIn(): void
+    {
+        Tessera::$tokensExpireIn = null;
+        Tessera::$clientCredentialsTokensExpireIn = null;
+
+        $this->assertEquals(new DateInterval('P1Y'), Tessera::clientCredentialsTokensExpireIn());
+
+        Tessera::tokensExpireIn($interval = new DateInterval('P1D'));
+
+        $this->assertSame($interval, Tessera::clientCredentialsTokensExpireIn());
+
+        Tessera::clientCredentialsTokensExpireIn($interval = new DateInterval('PT1H'));
+
+        $this->assertSame($interval, Tessera::clientCredentialsTokensExpireIn());
+
+        Tessera::$tokensExpireIn = null;
+        Tessera::$clientCredentialsTokensExpireIn = null;
     }
 }

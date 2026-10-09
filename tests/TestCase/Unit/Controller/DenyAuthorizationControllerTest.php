@@ -11,8 +11,9 @@ use Laminas\Diactoros\Response as PsrResponse;
 use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\Exception\OAuthServerException as LeagueException;
 use League\OAuth2\Server\RequestTypes\AuthorizationRequest;
-use Mockery;
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use JMac\Testing\Double;
+use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
+use JMac\Testing\Matching\Argument;
 use RuntimeException;
 
 /**
@@ -20,7 +21,7 @@ use RuntimeException;
  */
 class DenyAuthorizationControllerTest extends TestCase
 {
-    use MockeryPHPUnitIntegration;
+    use VerifiesDoubles;
 
     /**
      * @return void
@@ -29,7 +30,7 @@ class DenyAuthorizationControllerTest extends TestCase
     {
         $this->expectException(OAuthServerException::class);
 
-        $server = Mockery::mock(AuthorizationServer::class);
+        $server = Double::for(AuthorizationServer::class);
         $controller = new DenyAuthorizationController(new ServerRequest());
 
         $authRequest = new AuthorizationRequest();
@@ -44,16 +45,14 @@ class DenyAuthorizationControllerTest extends TestCase
 
         $controller->setRequest($request);
 
-        $server->shouldReceive('completeAuthorizationRequest')
+        $server->allows('completeAuthorizationRequest')
             ->with(
-                Mockery::on(
+                Argument::satisfies(
                     static fn(AuthorizationRequest $request): bool => !$request->isAuthorizationApproved(),
                 ),
-                Mockery::type(PsrResponse::class),
+                Argument::type(PsrResponse::class),
             )
-            ->andReturnUsing(static function (): void {
-                throw new LeagueException('', 0, '');
-            });
+            ->throws(new LeagueException('', 0, ''));
 
         $controller->deny($server);
     }
@@ -66,7 +65,7 @@ class DenyAuthorizationControllerTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Authorization request was not present in the session.');
 
-        $server = Mockery::mock(AuthorizationServer::class);
+        $server = Double::for(AuthorizationServer::class);
         $controller = new DenyAuthorizationController(new ServerRequest());
 
         $request = new ServerRequest();
@@ -77,7 +76,7 @@ class DenyAuthorizationControllerTest extends TestCase
 
         $controller->setRequest($request);
 
-        $server->shouldReceive('completeAuthorizationRequest')->never();
+        $server->expects('completeAuthorizationRequest')->never();
 
         $controller->deny($server);
     }

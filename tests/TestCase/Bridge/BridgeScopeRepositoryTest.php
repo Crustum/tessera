@@ -10,15 +10,15 @@ use Crustum\Tessera\Bridge\ScopeRepository;
 use Crustum\Tessera\ClientRepository;
 use Crustum\Tessera\Model\Entity\Client as ClientModel;
 use Crustum\Tessera\Tessera;
-use Mockery;
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use JMac\Testing\Double;
+use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
 
 /**
  * Bridge scope repository unit tests.
  */
 class BridgeScopeRepositoryTest extends TestCase
 {
-    use MockeryPHPUnitIntegration;
+    use VerifiesDoubles;
 
     /**
      * @return void
@@ -41,8 +41,8 @@ class BridgeScopeRepositoryTest extends TestCase
         ]);
 
         $client = new ClientModel();
-        $clients = Mockery::mock(ClientRepository::class);
-        $clients->shouldReceive('findActive')->withAnyArgs()->andReturn($client);
+        $clients = Double::for(ClientRepository::class);
+        $clients->expects('findActive')->returns($client);
 
         $repository = new ScopeRepository($clients);
 
@@ -67,8 +67,8 @@ class BridgeScopeRepositoryTest extends TestCase
         ]);
 
         $client = new ClientModel(['scopes' => null]);
-        $clients = Mockery::mock(ClientRepository::class);
-        $clients->shouldReceive('findActive')->withAnyArgs()->andReturn($client);
+        $clients = Double::for(ClientRepository::class);
+        $clients->expects('findActive')->returns($client);
 
         $repository = new ScopeRepository($clients);
 
@@ -93,8 +93,8 @@ class BridgeScopeRepositoryTest extends TestCase
         ]);
 
         $client = new ClientModel(['scopes' => ['scope-1']]);
-        $clients = Mockery::mock(ClientRepository::class);
-        $clients->shouldReceive('findActive')->withAnyArgs()->andReturn($client);
+        $clients = Double::for(ClientRepository::class);
+        $clients->expects('findActive')->returns($client);
 
         $repository = new ScopeRepository($clients);
 
@@ -122,8 +122,8 @@ class BridgeScopeRepositoryTest extends TestCase
         ]);
 
         $client = new ClientModel(['scopes' => ['scope-1']]);
-        $clients = Mockery::mock(ClientRepository::class);
-        $clients->shouldReceive('findActive')->withAnyArgs()->andReturn($client);
+        $clients = Double::for(ClientRepository::class);
+        $clients->expects('findActive')->returns($client);
 
         $repository = new ScopeRepository($clients);
 
@@ -147,8 +147,8 @@ class BridgeScopeRepositoryTest extends TestCase
         ]);
 
         $client = new ClientModel();
-        $clients = Mockery::mock(ClientRepository::class);
-        $clients->shouldReceive('findActive')->withAnyArgs()->andReturn($client);
+        $clients = Double::for(ClientRepository::class);
+        $clients->expects('findActive')->returns($client);
 
         $repository = new ScopeRepository($clients);
 

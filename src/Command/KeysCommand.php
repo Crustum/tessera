@@ -9,7 +9,7 @@ use Cake\Console\ConsoleIo;
 use Cake\Console\ConsoleOptionParser;
 use Crustum\Tessera\Tessera;
 use Override;
-use phpseclib3\Crypt\RSA;
+use phpseclib4\Crypt\RSA;
 
 /**
  * Generate OAuth encryption keys for Tessera.

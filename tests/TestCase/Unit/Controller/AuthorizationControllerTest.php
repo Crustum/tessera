@@ -17,15 +17,16 @@ use Laminas\Diactoros\Response as PsrResponse;
 use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\Exception\OAuthServerException as LeagueException;
 use League\OAuth2\Server\RequestTypes\AuthorizationRequest;
-use Mockery;
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use JMac\Testing\Double;
+use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
+use JMac\Testing\Matching\Argument;
 
 /**
  * AuthorizationController unit tests.
  */
 class AuthorizationControllerTest extends TestCase
 {
-    use MockeryPHPUnitIntegration;
+    use VerifiesDoubles;
 
     /**
      * @return void
@@ -56,8 +57,8 @@ class AuthorizationControllerTest extends TestCase
         $authRequest->setClient(new BridgeClient('1', 'Test Client'));
         $authRequest->setScopes([new BridgeScope('scope-1')]);
 
-        $server = Mockery::mock(AuthorizationServer::class);
-        $server->shouldReceive('validateAuthorizationRequest')->with($request)->andReturn($authRequest);
+        $server = Double::for(AuthorizationServer::class);
+        $server->allows('validateAuthorizationRequest')->with($request)->returns($authRequest);
 
         $viewVars = null;
         Tessera::authorizationView(static function (array $vars) use (&$viewVars): Response {
@@ -85,12 +86,12 @@ class AuthorizationControllerTest extends TestCase
     {
         $identity = $this->makeIdentity();
         $request = (new ServerRequest())->withAttribute('identity', $identity);
-        $clients = Mockery::mock(ClientRepository::class);
+        $clients = Double::for(ClientRepository::class);
 
-        $server = Mockery::mock(AuthorizationServer::class);
-        $server->shouldReceive('validateAuthorizationRequest')
+        $server = Double::for(AuthorizationServer::class);
+        $server->allows('validateAuthorizationRequest')
             ->with($request)
-            ->andThrow(LeagueException::invalidCredentials());
+            ->throws(LeagueException::invalidCredentials());
 
         $controller = $this->makeController($request);
 
@@ -113,21 +114,24 @@ class AuthorizationControllerTest extends TestCase
         $client = $this->makeClient(false);
         $clients = $this->makeClientRepository($client);
 
-        $authRequest = Mockery::mock(AuthorizationRequest::class);
-        $authRequest->shouldReceive('getClient->getIdentifier')->once()->andReturn('1');
-        $authRequest->shouldReceive('getScopes')->once()->andReturn([new BridgeScope('scope-1')]);
-        $authRequest->shouldReceive('setUser')->once()->andReturnNull();
-        $authRequest->shouldReceive('setAuthorizationApproved')->once()->with(true);
-        $authRequest->shouldReceive('getGrantTypeId')->once()->andReturn('authorization_code');
+        $bridgeClient = Double::for(BridgeClient::class);
+        $bridgeClient->allows('getIdentifier')->returns('1');
+
+        $authRequest = Double::for(AuthorizationRequest::class);
+        $authRequest->allows('getClient')->returns($bridgeClient);
+        $authRequest->expects('getScopes')->returns([new BridgeScope('scope-1')]);
+        $authRequest->expects('setUser');
+        $authRequest->expects('setAuthorizationApproved')->with(true);
+        $authRequest->expects('getGrantTypeId')->returns('authorization_code');
 
         $psrResponse = new PsrResponse();
         $psrResponse->getBody()->write('approved');
 
-        $server = Mockery::mock(AuthorizationServer::class);
-        $server->shouldReceive('validateAuthorizationRequest')->with($request)->andReturn($authRequest);
-        $server->shouldReceive('completeAuthorizationRequest')
-            ->with($authRequest, Mockery::type(PsrResponse::class))
-            ->andReturn($psrResponse);
+        $server = Double::for(AuthorizationServer::class);
+        $server->allows('validateAuthorizationRequest')->with($request)->returns($authRequest);
+        $server->allows('completeAuthorizationRequest')
+            ->with($authRequest, Argument::type(PsrResponse::class))
+            ->returns($psrResponse);
 
         $controller = $this->makeController($request);
         $controller->grantedScopes = true;
@@ -151,21 +155,24 @@ class AuthorizationControllerTest extends TestCase
         $client = $this->makeClient(true);
         $clients = $this->makeClientRepository($client);
 
-        $authRequest = Mockery::mock(AuthorizationRequest::class);
-        $authRequest->shouldReceive('getClient->getIdentifier')->once()->andReturn('1');
-        $authRequest->shouldReceive('getScopes')->once()->andReturn([new BridgeScope('scope-1')]);
-        $authRequest->shouldReceive('setUser')->once()->andReturnNull();
-        $authRequest->shouldReceive('setAuthorizationApproved')->once()->with(true);
-        $authRequest->shouldReceive('getGrantTypeId')->once()->andReturn('authorization_code');
+        $bridgeClient = Double::for(BridgeClient::class);
+        $bridgeClient->allows('getIdentifier')->returns('1');
+
+        $authRequest = Double::for(AuthorizationRequest::class);
+        $authRequest->allows('getClient')->returns($bridgeClient);
+        $authRequest->expects('getScopes')->returns([new BridgeScope('scope-1')]);
+        $authRequest->expects('setUser');
+        $authRequest->expects('setAuthorizationApproved')->with(true);
+        $authRequest->expects('getGrantTypeId')->returns('authorization_code');
 
         $psrResponse = new PsrResponse();
         $psrResponse->getBody()->write('approved');
 
-        $server = Mockery::mock(AuthorizationServer::class);
-        $server->shouldReceive('validateAuthorizationRequest')->with($request)->andReturn($authRequest);
-        $server->shouldReceive('completeAuthorizationRequest')
-            ->with($authRequest, Mockery::type(PsrResponse::class))
-            ->andReturn($psrResponse);
+        $server = Double::for(AuthorizationServer::class);
+        $server->allows('validateAuthorizationRequest')->with($request)->returns($authRequest);
+        $server->allows('completeAuthorizationRequest')
+            ->with($authRequest, Argument::type(PsrResponse::class))
+            ->returns($psrResponse);
 
         $controller = $this->makeController($request);
 
@@ -194,8 +201,8 @@ class AuthorizationControllerTest extends TestCase
         $authRequest->setClient(new BridgeClient('1', 'Test Client'));
         $authRequest->setScopes([new BridgeScope('scope-1')]);
 
-        $server = Mockery::mock(AuthorizationServer::class);
-        $server->shouldReceive('validateAuthorizationRequest')->with($request)->andReturn($authRequest);
+        $server = Double::for(AuthorizationServer::class);
+        $server->allows('validateAuthorizationRequest')->with($request)->returns($authRequest);
 
         $viewVars = null;
         Tessera::authorizationView(static function (array $vars) use (&$viewVars): Response {
@@ -230,16 +237,19 @@ class AuthorizationControllerTest extends TestCase
         $client = $this->makeClient(false);
         $clients = $this->makeClientRepository($client);
 
-        $authRequest = Mockery::mock(AuthorizationRequest::class);
-        $authRequest->shouldReceive('getClient->getIdentifier')->once()->andReturn('1');
-        $authRequest->shouldReceive('getScopes')->once()->andReturn([new BridgeScope('scope-1')]);
-        $authRequest->shouldReceive('setUser')->once()->andReturnNull();
-        $authRequest->shouldReceive('getRedirectUri')->once()->andReturn('http://localhost');
-        $authRequest->shouldReceive('getState')->once()->andReturn('state');
-        $authRequest->shouldReceive('getGrantTypeId')->once()->andReturn('authorization_code');
+        $bridgeClient = Double::for(BridgeClient::class);
+        $bridgeClient->allows('getIdentifier')->returns('1');
 
-        $server = Mockery::mock(AuthorizationServer::class);
-        $server->shouldReceive('validateAuthorizationRequest')->with($request)->andReturn($authRequest);
+        $authRequest = Double::for(AuthorizationRequest::class);
+        $authRequest->allows('getClient')->returns($bridgeClient);
+        $authRequest->expects('getScopes')->returns([new BridgeScope('scope-1')]);
+        $authRequest->expects('setUser');
+        $authRequest->expects('getRedirectUri')->returns('http://localhost');
+        $authRequest->expects('getState')->returns('state');
+        $authRequest->expects('getGrantTypeId')->returns('authorization_code');
+
+        $server = Double::for(AuthorizationServer::class);
+        $server->allows('validateAuthorizationRequest')->with($request)->returns($authRequest);
 
         $controller = $this->makeController($request);
 
@@ -267,18 +277,21 @@ class AuthorizationControllerTest extends TestCase
         $request = new ServerRequest([
             'query' => ['prompt' => 'none'],
         ]);
-        $clients = Mockery::mock(ClientRepository::class);
+        $clients = Double::for(ClientRepository::class);
 
-        $authRequest = Mockery::mock(AuthorizationRequest::class);
-        $authRequest->shouldNotReceive('setUser');
-        $authRequest->shouldReceive('getRedirectUri')->andReturn('http://localhost');
-        $authRequest->shouldReceive('getClient->getRedirectUri')->andReturn('http://localhost');
-        $authRequest->shouldReceive('getState')->once()->andReturn('state');
-        $authRequest->shouldReceive('getGrantTypeId')->once()->andReturn('authorization_code');
+        $bridgeClient = Double::for(BridgeClient::class);
+        $bridgeClient->allows('getRedirectUri')->returns('http://localhost');
 
-        $server = Mockery::mock(AuthorizationServer::class);
-        $server->shouldReceive('validateAuthorizationRequest')->with($request)->andReturn($authRequest);
-        $server->shouldNotReceive('completeAuthorizationRequest');
+        $authRequest = Double::for(AuthorizationRequest::class);
+        $authRequest->expects('setUser')->never();
+        $authRequest->allows('getRedirectUri')->returns('http://localhost');
+        $authRequest->allows('getClient')->returns($bridgeClient);
+        $authRequest->expects('getState')->returns('state');
+        $authRequest->expects('getGrantTypeId')->returns('authorization_code');
+
+        $server = Double::for(AuthorizationServer::class);
+        $server->allows('validateAuthorizationRequest')->with($request)->returns($authRequest);
+        $server->expects('completeAuthorizationRequest')->never();
 
         $controller = $this->makeController($request);
 
@@ -308,10 +321,10 @@ class AuthorizationControllerTest extends TestCase
             'query' => ['prompt' => 'login'],
             'url' => '/oauth/authorize?prompt=login',
         ]))->withAttribute('identity', $identity);
-        $clients = Mockery::mock(ClientRepository::class);
+        $clients = Double::for(ClientRepository::class);
 
-        $server = Mockery::mock(AuthorizationServer::class);
-        $server->shouldReceive('validateAuthorizationRequest')->once();
+        $server = Double::for(AuthorizationServer::class);
+        $server->expects('validateAuthorizationRequest');
 
         $controller = $this->makeController($request);
 
@@ -330,10 +343,10 @@ class AuthorizationControllerTest extends TestCase
         $request = new ServerRequest([
             'url' => '/oauth/authorize?client_id=1',
         ]);
-        $clients = Mockery::mock(ClientRepository::class);
+        $clients = Double::for(ClientRepository::class);
 
-        $server = Mockery::mock(AuthorizationServer::class);
-        $server->shouldReceive('validateAuthorizationRequest')->once();
+        $server = Double::for(AuthorizationServer::class);
+        $server->expects('validateAuthorizationRequest');
 
         $controller = $this->makeController($request);
 
@@ -364,8 +377,8 @@ class AuthorizationControllerTest extends TestCase
      */
     private function makeIdentity(int $id = 1): IdentityInterface
     {
-        $identity = Mockery::mock(IdentityInterface::class);
-        $identity->shouldReceive('getIdentifier')->andReturn($id);
+        $identity = Double::for(IdentityInterface::class);
+        $identity->allows('getIdentifier')->returns($id);
 
         return $identity;
     }
@@ -376,9 +389,9 @@ class AuthorizationControllerTest extends TestCase
      */
     private function makeClient(bool $skipsAuthorization): Client
     {
-        $client = Mockery::mock(Client::class);
-        $client->shouldReceive('skipsAuthorization')
-            ->andReturnUsing(static fn(object $user, array $scopes): bool => $skipsAuthorization);
+        $client = Double::for(Client::class);
+        $client->allows('skipsAuthorization')
+            ->resolves(static fn(object $user, array $scopes): bool => $skipsAuthorization);
 
         return $client;
     }
@@ -389,8 +402,8 @@ class AuthorizationControllerTest extends TestCase
      */
     private function makeClientRepository(Client $client): ClientRepository
     {
-        $clients = Mockery::mock(ClientRepository::class);
-        $clients->shouldReceive('find')->with('1')->andReturn($client);
+        $clients = Double::for(ClientRepository::class);
+        $clients->allows('find')->with('1')->returns($client);
 
         return $clients;
     }

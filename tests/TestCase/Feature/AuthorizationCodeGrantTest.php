@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Crustum\Tessera\Test\TestCase\Feature;
 
+use Cake\ORM\TableRegistry;
 use Cake\Utility\Security;
 use Cake\Utility\Text;
 use Crustum\Tessera\ClientRepository;
@@ -630,6 +631,56 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
     }
 
     /**
+     * @return void
+     */
+    public function testSkipsAuthorizationWhenClientSkipsAuthorization(): void
+    {
+        Tessera::useClientModel(SkipsAuthorizationClient::class);
+        TableRegistry::getTableLocator()->clear();
+
+        try {
+            $client = $this->makeAuthCodeClient();
+            $redirect = $client->redirect_uris[0];
+            $state = Text::uuid();
+
+            $this->loginAs($this->createUser());
+            $this->get('/oauth/authorize?' . http_build_query([
+                'client_id' => $client->id,
+                'redirect_uri' => $redirect,
+                'response_type' => 'code',
+                'scope' => 'create read',
+                'state' => $state,
+            ]));
+
+            $this->assertResponseCode(302);
+            $this->assertNull($this->getSession()->read('authRequest'));
+            $this->assertNull($this->getSession()->read('authToken'));
+
+            $location = $this->_response->getHeaderLine('Location');
+            parse_str((string)parse_url($location, PHP_URL_QUERY), $params);
+
+            $this->assertStringStartsWith($redirect . '?', $location);
+            $this->assertSame($state, $params['state']);
+            $this->assertArrayHasKey('code', $params);
+        } finally {
+            Tessera::useClientModel(Client::class);
+            TableRegistry::getTableLocator()->clear();
+        }
+    }
+
+    /**
+     * @return void
+     */
+    public function testAuthRequestMustBePresentInSession(): void
+    {
+        $this->loginAs($this->createUser());
+        $this->session(['authToken' => 'token']);
+
+        $this->expectExceptionMessage('Authorization request was not present in the session.');
+        $this->post('/oauth/authorize', ['auth_token' => 'token']);
+    }
+
+    /**
      * @return \Crustum\Tessera\Model\Entity\Client
      */
     protected function makeAuthCodeClient(): Client
@@ -694,5 +745,19 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
             'code' => $params['code'],
         ]);
         $this->assertResponseOk();
+    }
+}
+
+/**
+ * Client entity that always skips the authorization prompt.
+ */
+class SkipsAuthorizationClient extends Client
+{
+    /**
+     * @inheritDoc
+     */
+    public function skipsAuthorization(object $user, array $scopes): bool
+    {
+        return true;
     }
 }

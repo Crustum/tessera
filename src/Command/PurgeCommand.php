@@ -7,6 +7,8 @@ use Cake\Command\Command;
 use Cake\Console\Arguments;
 use Cake\Console\ConsoleIo;
 use Cake\Console\ConsoleOptionParser;
+use Cake\Database\Expression\QueryExpression;
+use Cake\Database\Query\SelectQuery as DbSelectQuery;
 use Cake\I18n\DateTime;
 use Crustum\Tessera\Tessera;
 use Override;
@@ -73,7 +75,9 @@ class PurgeCommand extends Command
 
         $conditions = $this->purgeConditions($purgeRevoked, $expiredBefore);
 
-        Tessera::tokensTable()->deleteAll($conditions);
+        Tessera::tokensTable()->deleteAll(
+            fn(QueryExpression $exp): QueryExpression => $exp->add($conditions)->notExists($this->activeRefreshTokens()),
+        );
         Tessera::authCodesTable()->deleteAll($conditions);
         Tessera::refreshTokensTable()->deleteAll($conditions);
 
@@ -121,5 +125,33 @@ class PurgeCommand extends Command
         }
 
         return ['OR' => $or];
+    }
+
+    /**
+     * Find refresh tokens still able to back their access token.
+     *
+     * @return \Cake\Database\Query\SelectQuery
+     */
+    protected function activeRefreshTokens(): DbSelectQuery
+    {
+        $tokens = Tessera::tokensTable()->getTable();
+        $refresh = Tessera::refreshTokensTable()->getTable();
+        $now = DateTime::now();
+
+        $active = new DbSelectQuery(Tessera::tokensTable()->getConnection());
+        $active
+            ->select('id')
+            ->from($refresh)
+            ->where(["{$refresh}.access_token_id = {$tokens}.id"])
+            ->where(["{$refresh}.revoked" => false], ["{$refresh}.revoked" => 'boolean'])
+            ->andWhere(fn(QueryExpression $exp): QueryExpression => $exp->or(
+                [
+                    "{$refresh}.expires IS" => null,
+                    "{$refresh}.expires >" => $now,
+                ],
+                ["{$refresh}.expires" => 'datetime'],
+            ));
+
+        return $active;
     }
 }

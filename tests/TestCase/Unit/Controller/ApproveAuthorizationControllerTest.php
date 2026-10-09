@@ -9,22 +9,23 @@ use Crustum\Tessera\Controller\ApproveAuthorizationController;
 use Laminas\Diactoros\Response as PsrResponse;
 use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\RequestTypes\AuthorizationRequest;
-use Mockery;
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use JMac\Testing\Double;
+use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
+use JMac\Testing\Matching\Argument;
 
 /**
  * ApproveAuthorizationController unit tests.
  */
 class ApproveAuthorizationControllerTest extends TestCase
 {
-    use MockeryPHPUnitIntegration;
+    use VerifiesDoubles;
 
     /**
      * @return void
      */
     public function testCompleteAuthorizationRequest(): void
     {
-        $server = Mockery::mock(AuthorizationServer::class);
+        $server = Double::for(AuthorizationServer::class);
 
         $authRequest = new AuthorizationRequest();
         $authRequest->setGrantTypeId('authorization_code');
@@ -42,14 +43,14 @@ class ApproveAuthorizationControllerTest extends TestCase
         $psrResponse = new PsrResponse();
         $psrResponse->getBody()->write('response');
 
-        $server->shouldReceive('completeAuthorizationRequest')
+        $server->allows('completeAuthorizationRequest')
             ->with(
-                Mockery::on(
+                Argument::satisfies(
                     static fn(AuthorizationRequest $request): bool => $request->isAuthorizationApproved(),
                 ),
-                Mockery::type(PsrResponse::class),
+                Argument::type(PsrResponse::class),
             )
-            ->andReturn($psrResponse);
+            ->returns($psrResponse);
 
         $response = $controller->approve($server);
 

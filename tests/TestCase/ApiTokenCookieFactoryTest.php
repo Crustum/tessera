@@ -6,7 +6,7 @@ namespace Crustum\Tessera\Test\TestCase;
 use Cake\TestSuite\TestCase;
 use Crustum\Tessera\ApiTokenCookieFactory;
 use Crustum\Tessera\Tessera;
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
 use Symfony\Component\HttpFoundation\Cookie;
 
 /**
@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Cookie;
  */
 class ApiTokenCookieFactoryTest extends TestCase
 {
-    use MockeryPHPUnitIntegration;
+    use VerifiesDoubles;
 
     /**
      * @return void

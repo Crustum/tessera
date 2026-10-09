@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Crustum\Tessera\Test\TestCase\Feature;
 
+use Cake\Console\TestSuite\ConsoleIntegrationTestTrait;
+use Cake\I18n\DateTime;
 use Crustum\Tessera\ClientRepository;
 use Crustum\Tessera\Model\Entity\Client;
 use Crustum\Tessera\Tessera;
@@ -12,6 +14,8 @@ use Crustum\Tessera\Tessera;
  */
 class RefreshTokenGrantTest extends TesseraTestCase
 {
+    use ConsoleIntegrationTestTrait;
+
     /**
      * @return void
      */
@@ -166,6 +170,44 @@ class RefreshTokenGrantTest extends TesseraTestCase
         $this->assertArrayHasKey('refresh_token', $json);
         $this->assertEqualsWithDelta(31536000, $json['expires_in'], 2);
         $this->assertSame('Bearer', $json['token_type']);
+    }
+
+    /**
+     * @return void
+     */
+    public function testRefreshTokenCannotBeUsedAfterUserTokensAreRevokedAfterPurge(): void
+    {
+        $client = $this->makeAuthCodeClient();
+
+        $oldToken = $this->getNewAccessToken($client);
+
+        $token = Tessera::tokensTable()->find()->orderByDesc('created')->firstOrFail();
+        $refresh = Tessera::refreshTokensTable()->find()
+            ->where(['access_token_id' => $token->id])
+            ->firstOrFail();
+
+        $token->set('expires', DateTime::now()->subDays(8));
+        Tessera::tokensTable()->saveOrFail($token);
+        $refresh->set('expires', DateTime::now()->addDays(30));
+        Tessera::refreshTokensTable()->saveOrFail($refresh);
+
+        $this->exec('tessera purge');
+        $this->assertExitSuccess();
+
+        $this->assertTrue(Tessera::tokensTable()->exists(['id' => $token->id]));
+        $refresh = Tessera::refreshTokensTable()->get($refresh->id);
+        $this->assertFalse($refresh->revoked);
+
+        Tessera::tokensTable()->revoke($token);
+        Tessera::refreshTokensTable()->revoke($refresh);
+
+        $this->post('/oauth/token', [
+            'grant_type' => 'refresh_token',
+            'client_id' => $client->id,
+            'client_secret' => $client->plainSecret,
+            'refresh_token' => $oldToken['refresh_token'],
+        ]);
+        $this->assertResponseCode(400);
     }
 
     /**
