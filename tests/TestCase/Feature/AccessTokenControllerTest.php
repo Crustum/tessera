@@ -27,7 +27,7 @@ class AccessTokenControllerTest extends TesseraTestCase
      */
     public function testGettingAccessTokenWithClientCredentialsGrant(): void
     {
-        $client = (new ClientRepository())->createClientCredentialsGrantClient('Test Client');
+        $client = new ClientRepository()->createClientCredentialsGrantClient('Test Client');
 
         $this->post('/oauth/token', [
             'grant_type' => 'client_credentials',
@@ -38,11 +38,11 @@ class AccessTokenControllerTest extends TesseraTestCase
         $this->assertResponseOk();
         $this->assertHeader('pragma', 'no-cache');
         $this->assertTrue(
-            str_contains(strtolower($this->_response->getHeaderLine('cache-control')), 'no-store'),
+            str_contains(strtolower($this->response->getHeaderLine('cache-control')), 'no-store'),
         );
-        $this->assertStringContainsString('application/json', $this->_response->getHeaderLine('content-type'));
+        $this->assertStringContainsString('application/json', $this->response->getHeaderLine('content-type'));
 
-        $decodedResponse = json_decode((string)$this->_response->getBody(), true);
+        $decodedResponse = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($decodedResponse);
         $this->assertArrayHasKey('token_type', $decodedResponse);
         $this->assertArrayHasKey('expires_in', $decodedResponse);
@@ -56,7 +56,7 @@ class AccessTokenControllerTest extends TesseraTestCase
      */
     public function testGettingAccessTokenWithClientCredentialsGrantInvalidClientSecret(): void
     {
-        $client = (new ClientRepository())->createClientCredentialsGrantClient('Test Client');
+        $client = new ClientRepository()->createClientCredentialsGrantClient('Test Client');
 
         $this->post('/oauth/token', [
             'grant_type' => 'client_credentials',
@@ -65,9 +65,9 @@ class AccessTokenControllerTest extends TesseraTestCase
         ]);
 
         $this->assertResponseCode(401);
-        $this->assertStringContainsString('application/json', $this->_response->getHeaderLine('content-type'));
+        $this->assertStringContainsString('application/json', $this->response->getHeaderLine('content-type'));
 
-        $decodedResponse = json_decode((string)$this->_response->getBody(), true);
+        $decodedResponse = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($decodedResponse);
         $this->assertArrayNotHasKey('token_type', $decodedResponse);
         $this->assertArrayNotHasKey('expires_in', $decodedResponse);
@@ -87,7 +87,7 @@ class AccessTokenControllerTest extends TesseraTestCase
     {
         Tessera::enablePasswordGrant();
 
-        $client = (new ClientRepository())->createPasswordGrantClient('Test Client', null, true);
+        $client = new ClientRepository()->createPasswordGrantClient('Test Client', null, true);
         $user = $this->createUser('foo@gmail.com', 'foobar123');
 
         $this->post('/oauth/token', [
@@ -101,11 +101,11 @@ class AccessTokenControllerTest extends TesseraTestCase
         $this->assertResponseOk();
         $this->assertHeader('pragma', 'no-cache');
         $this->assertTrue(
-            str_contains(strtolower($this->_response->getHeaderLine('cache-control')), 'no-store'),
+            str_contains(strtolower($this->response->getHeaderLine('cache-control')), 'no-store'),
         );
-        $this->assertStringContainsString('application/json', $this->_response->getHeaderLine('content-type'));
+        $this->assertStringContainsString('application/json', $this->response->getHeaderLine('content-type'));
 
-        $decodedResponse = json_decode((string)$this->_response->getBody(), true);
+        $decodedResponse = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($decodedResponse);
         $this->assertArrayHasKey('token_type', $decodedResponse);
         $this->assertArrayHasKey('expires_in', $decodedResponse);
@@ -122,7 +122,7 @@ class AccessTokenControllerTest extends TesseraTestCase
     {
         Tessera::enablePasswordGrant();
 
-        $client = (new ClientRepository())->createPasswordGrantClient('Test Client', null, true);
+        $client = new ClientRepository()->createPasswordGrantClient('Test Client', null, true);
         $user = $this->createUser('foo@gmail.com', 'foobar123');
 
         $this->post('/oauth/token', [
@@ -134,9 +134,9 @@ class AccessTokenControllerTest extends TesseraTestCase
         ]);
 
         $this->assertResponseCode(400);
-        $this->assertStringContainsString('application/json', $this->_response->getHeaderLine('content-type'));
+        $this->assertStringContainsString('application/json', $this->response->getHeaderLine('content-type'));
 
-        $decodedResponse = json_decode((string)$this->_response->getBody(), true);
+        $decodedResponse = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($decodedResponse);
         $this->assertArrayNotHasKey('token_type', $decodedResponse);
         $this->assertArrayNotHasKey('expires_in', $decodedResponse);
@@ -156,7 +156,7 @@ class AccessTokenControllerTest extends TesseraTestCase
     {
         Tessera::enablePasswordGrant();
 
-        $client = (new ClientRepository())->createPasswordGrantClient('Test Client', null, true);
+        $client = new ClientRepository()->createPasswordGrantClient('Test Client', null, true);
         $user = $this->createUser('foo@gmail.com', 'foobar123');
 
         $this->post('/oauth/token', [
@@ -168,9 +168,9 @@ class AccessTokenControllerTest extends TesseraTestCase
         ]);
 
         $this->assertResponseCode(401);
-        $this->assertStringContainsString('application/json', $this->_response->getHeaderLine('content-type'));
+        $this->assertStringContainsString('application/json', $this->response->getHeaderLine('content-type'));
 
-        $decodedResponse = json_decode((string)$this->_response->getBody(), true);
+        $decodedResponse = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($decodedResponse);
         $this->assertArrayNotHasKey('token_type', $decodedResponse);
         $this->assertArrayNotHasKey('expires_in', $decodedResponse);
@@ -191,7 +191,7 @@ class AccessTokenControllerTest extends TesseraTestCase
     {
         Tessera::$authorizationServerResponseType = new IdTokenResponse('foo_bar_open_id_token');
 
-        $client = (new ClientRepository())->createClientCredentialsGrantClient('Test Client');
+        $client = new ClientRepository()->createClientCredentialsGrantClient('Test Client');
 
         $this->post('/oauth/token', [
             'grant_type' => 'client_credentials',
@@ -200,7 +200,7 @@ class AccessTokenControllerTest extends TesseraTestCase
         ]);
 
         $this->assertResponseOk();
-        $decodedResponse = json_decode((string)$this->_response->getBody(), true);
+        $decodedResponse = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($decodedResponse);
         $this->assertArrayHasKey('id_token', $decodedResponse);
         $this->assertSame('foo_bar_open_id_token', $decodedResponse['id_token']);

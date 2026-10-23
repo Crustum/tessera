@@ -36,9 +36,9 @@ class CreateFreshApiTokenMiddlewareTest extends TestCase
         $user = Double::for(OAuthenticatable::class);
         $user->allows('getIdentifier')->returns(1);
 
-        $request = (new ServerRequest([
+        $request = new ServerRequest([
             'environment' => ['REQUEST_METHOD' => 'GET'],
-        ]))
+        ])
             ->withAttribute('identity', $user)
             ->withAttribute('csrfToken', 't0k3n');
 
@@ -63,9 +63,9 @@ class CreateFreshApiTokenMiddlewareTest extends TestCase
         $user = Double::for(OAuthenticatable::class);
         $user->allows('getIdentifier')->returns(1);
 
-        $request = (new ServerRequest([
+        $request = new ServerRequest([
             'environment' => ['REQUEST_METHOD' => 'GET'],
-        ]))->withAttribute('identity', $user);
+        ])->withAttribute('identity', $user);
 
         $response = new Response();
         $cookieFactory->expects('make')->never();
@@ -87,9 +87,9 @@ class CreateFreshApiTokenMiddlewareTest extends TestCase
         $user = Double::for(OAuthenticatable::class);
         $user->allows('getIdentifier')->returns(1);
 
-        $request = (new ServerRequest([
+        $request = new ServerRequest([
             'environment' => ['REQUEST_METHOD' => 'GET'],
-        ]))
+        ])
             ->withAttribute('identity', $user)
             ->withAttribute('csrfToken', '');
 
@@ -149,11 +149,11 @@ class CreateFreshApiTokenMiddlewareTest extends TestCase
         $user = Double::for(OAuthenticatable::class);
         $user->allows('getIdentifier')->returns(1);
 
-        $request = (new ServerRequest([
+        $request = new ServerRequest([
             'environment' => ['REQUEST_METHOD' => 'GET'],
-        ]))->withAttribute('identity', $user);
+        ])->withAttribute('identity', $user);
 
-        $response = (new Response())->withHeader('Set-Cookie', Tessera::cookie() . '=existing');
+        $response = new Response()->withHeader('Set-Cookie', Tessera::cookie() . '=existing');
 
         $result = $middleware->process($request, $this->makeHandler($response));
 
@@ -169,9 +169,9 @@ class CreateFreshApiTokenMiddlewareTest extends TestCase
         $cookieFactory = Double::for(ApiTokenCookieFactory::class);
         $middleware = new CreateFreshApiTokenMiddleware($cookieFactory);
 
-        $request = (new ServerRequest([
+        $request = new ServerRequest([
             'environment' => ['REQUEST_METHOD' => 'GET'],
-        ]))
+        ])
             ->withAttribute('identity', new Identity(new User(['id' => 1], ['markNew' => false])))
             ->withAttribute('csrfToken', 't0k3n');
 
@@ -194,13 +194,8 @@ class CreateFreshApiTokenMiddlewareTest extends TestCase
     protected function hasTesseraCookie(ResponseInterface $response): bool
     {
         $prefix = Tessera::cookie() . '=';
-        foreach ($response->getHeader('Set-Cookie') as $cookieHeader) {
-            if (str_starts_with($cookieHeader, $prefix)) {
-                return true;
-            }
-        }
 
-        return false;
+        return array_any($response->getHeader('Set-Cookie'), fn(string $cookieHeader): bool => str_starts_with($cookieHeader, $prefix));
     }
 
     /**

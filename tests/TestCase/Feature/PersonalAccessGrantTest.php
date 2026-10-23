@@ -60,8 +60,8 @@ class PersonalAccessGrantTest extends TesseraTestCase
     public function testIssueToken(): void
     {
         $user = $this->createUser();
-        (new ClientRepository())->createPersonalAccessGrantClient('PAT Client');
-        $client = (new ClientRepository())->personalAccessClient('users');
+        new ClientRepository()->createPersonalAccessGrantClient('PAT Client');
+        $client = new ClientRepository()->personalAccessClient('users');
 
         Tessera::tokensCan([
             'foo' => 'Do foo',
@@ -99,8 +99,8 @@ class PersonalAccessGrantTest extends TesseraTestCase
     public function testIssueTokenWithAllScopes(): void
     {
         $user = $this->createUser();
-        (new ClientRepository())->createPersonalAccessGrantClient('PAT Client');
-        $client = (new ClientRepository())->personalAccessClient('users');
+        new ClientRepository()->createPersonalAccessGrantClient('PAT Client');
+        $client = new ClientRepository()->personalAccessClient('users');
 
         $result = $user->createToken('test', ['*']);
         $token = $result->getToken();
@@ -118,7 +118,7 @@ class PersonalAccessGrantTest extends TesseraTestCase
         ]);
         $this->get('/token-info');
         $this->assertResponseOk();
-        $info = json_decode((string)$this->_response->getBody(), true);
+        $info = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($info);
         $this->assertSame($token->id, $info['oauth_access_token_id']);
         $this->assertSame($client->id, $info['oauth_client_id']);
@@ -131,9 +131,9 @@ class PersonalAccessGrantTest extends TesseraTestCase
      */
     public function testIssueTokenWithDifferentProviders(): void
     {
-        $client = (new ClientRepository())->createPersonalAccessGrantClient('Users PAT');
-        $adminClient = (new ClientRepository())->createPersonalAccessGrantClient('Admins PAT', 'admins');
-        $customerClient = (new ClientRepository())->createPersonalAccessGrantClient('Customers PAT', 'customers');
+        $client = new ClientRepository()->createPersonalAccessGrantClient('Users PAT');
+        $adminClient = new ClientRepository()->createPersonalAccessGrantClient('Admins PAT', 'admins');
+        $customerClient = new ClientRepository()->createPersonalAccessGrantClient('Customers PAT', 'customers');
 
         $user = $this->createUser();
         $userToken = $user->createToken('test user');
@@ -180,7 +180,7 @@ class PersonalAccessGrantTest extends TesseraTestCase
     public function testPersonalAccessTokenRequestIsDisabled(): void
     {
         $user = $this->createUser();
-        (new ClientRepository())->createPersonalAccessGrantClient('PAT Client');
+        new ClientRepository()->createPersonalAccessGrantClient('PAT Client');
 
         $this->post('/oauth/token', [
             'grant_type' => 'personal_access',
@@ -189,7 +189,7 @@ class PersonalAccessGrantTest extends TesseraTestCase
             'scope' => '',
         ]);
         $this->assertResponseCode(400);
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertSame('unsupported_grant_type', $json['error']);
         $this->assertArrayHasKey('error_description', $json);

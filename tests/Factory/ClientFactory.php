@@ -42,7 +42,7 @@ class ClientFactory extends BaseFactory
      *
      * @return $this
      */
-    public function asPublic()
+    public function asPublic(): static
     {
         return $this->state([
             'secret' => null,
@@ -54,7 +54,7 @@ class ClientFactory extends BaseFactory
      *
      * @return $this
      */
-    public function asPasswordClient()
+    public function asPasswordClient(): static
     {
         return $this->state([
             'grant_types' => ['password', 'refresh_token'],
@@ -67,7 +67,7 @@ class ClientFactory extends BaseFactory
      *
      * @return $this
      */
-    public function asPersonalAccessTokenClient()
+    public function asPersonalAccessTokenClient(): static
     {
         return $this->state([
             'grant_types' => ['personal_access'],
@@ -80,7 +80,7 @@ class ClientFactory extends BaseFactory
      *
      * @return $this
      */
-    public function asImplicitClient()
+    public function asImplicitClient(): static
     {
         return $this->state([
             'grant_types' => ['implicit'],
@@ -93,7 +93,7 @@ class ClientFactory extends BaseFactory
      *
      * @return $this
      */
-    public function asClientCredentials()
+    public function asClientCredentials(): static
     {
         return $this->state([
             'grant_types' => ['client_credentials'],
@@ -106,7 +106,7 @@ class ClientFactory extends BaseFactory
      *
      * @return $this
      */
-    public function asDeviceCodeClient()
+    public function asDeviceCodeClient(): static
     {
         return $this->state([
             'grant_types' => ['urn:ietf:params:oauth:grant-type:device_code', 'refresh_token'],

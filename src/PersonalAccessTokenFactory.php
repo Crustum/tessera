@@ -56,7 +56,7 @@ class PersonalAccessTokenFactory
     {
         $url = (string)(Configure::read('App.fullBaseUrl') ?? 'http://localhost');
 
-        return (new PsrHttpFactory())->createRequest(Request::create($url, 'POST', [
+        return new PsrHttpFactory()->createRequest(Request::create($url, 'POST', [
             'grant_type' => 'personal_access',
             'provider' => $provider,
             'user_id' => $userId,

@@ -18,7 +18,7 @@ class RefreshToken extends Entity
     /**
      * @var array<string, bool>
      */
-    protected array $_accessible = [
+    protected array $patchable = [
         'access_token_id' => true,
         'revoked' => true,
         'expires' => true,
@@ -29,7 +29,7 @@ class RefreshToken extends Entity
      *
      * @return $this
      */
-    public function markRevoked()
+    public function markRevoked(): static
     {
         $this->set('revoked', true);
 

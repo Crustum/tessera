@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 namespace Crustum\Tessera\Test\TestCase\Feature;
 
+use Cake\Utility\Text;
 use Crustum\Tessera\ClientRepository;
 use Crustum\Tessera\Model\Entity\Client;
 use Crustum\Tessera\Tessera;
-use Cake\Utility\Text;
 
 /**
  * Implicit grant Feature coverage.
@@ -65,7 +65,7 @@ class ImplicitGrantTest extends TesseraTestCase
         ]));
 
         $this->assertResponseOk();
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertEqualsCanonicalizing(
             ['client', 'user', 'scopes', 'request', 'authToken'],
@@ -85,7 +85,7 @@ class ImplicitGrantTest extends TesseraTestCase
         $this->assertNull($this->getSession()->read('authRequest'));
         $this->assertNull($this->getSession()->read('authToken'));
 
-        $location = $this->_response->getHeaderLine('Location');
+        $location = $this->response->getHeaderLine('Location');
         parse_str((string)parse_url($location, PHP_URL_FRAGMENT), $params);
 
         $this->assertStringStartsWith($redirect . '#', $location);
@@ -104,7 +104,7 @@ class ImplicitGrantTest extends TesseraTestCase
         $this->get('/token-info');
         $this->assertResponseOk();
 
-        $info = json_decode((string)$this->_response->getBody(), true);
+        $info = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($info);
         $this->assertSame($client->id, $info['oauth_client_id']);
         $this->assertEquals($user->id, $info['oauth_user_id']);
@@ -131,16 +131,16 @@ class ImplicitGrantTest extends TesseraTestCase
         ]));
 
         $this->assertResponseOk();
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
 
         $this->syncSession();
-        $this->_sendRequest('/oauth/authorize', 'DELETE', ['auth_token' => $json['authToken']]);
+        $this->sendRequest('/oauth/authorize', 'DELETE', ['auth_token' => $json['authToken']]);
         $this->assertResponseCode(302);
         $this->assertNull($this->getSession()->read('authRequest'));
         $this->assertNull($this->getSession()->read('authToken'));
 
-        $location = $this->_response->getHeaderLine('Location');
+        $location = $this->response->getHeaderLine('Location');
         parse_str((string)parse_url($location, PHP_URL_FRAGMENT), $params);
 
         $this->assertStringStartsWith($redirect . '#', $location);
@@ -171,7 +171,7 @@ class ImplicitGrantTest extends TesseraTestCase
         ]));
         $this->assertResponseCode(302);
 
-        $location = $this->_response->getHeaderLine('Location');
+        $location = $this->response->getHeaderLine('Location');
         parse_str((string)parse_url($location, PHP_URL_FRAGMENT), $params);
 
         $this->assertStringStartsWith($redirect . '#', $location);
@@ -195,7 +195,7 @@ class ImplicitGrantTest extends TesseraTestCase
             'response_type' => 'token',
         ]));
 
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertSame('invalid_client', $json['error']);
         $this->assertArrayHasKey('error_description', $json);
@@ -219,7 +219,7 @@ class ImplicitGrantTest extends TesseraTestCase
         ]));
         $this->assertResponseCode(302);
 
-        $location = $this->_response->getHeaderLine('Location');
+        $location = $this->response->getHeaderLine('Location');
         parse_str((string)parse_url($location, PHP_URL_FRAGMENT), $params);
 
         $this->assertStringStartsWith($redirect . '#', $location);
@@ -243,7 +243,7 @@ class ImplicitGrantTest extends TesseraTestCase
 
         $this->assertResponseCode(302);
         $this->assertTrue((bool)$this->getSession()->read('promptedForLogin'));
-        $this->assertStringContainsString('/login', $this->_response->getHeaderLine('Location'));
+        $this->assertStringContainsString('/login', $this->response->getHeaderLine('Location'));
     }
 
     /**
@@ -265,7 +265,7 @@ class ImplicitGrantTest extends TesseraTestCase
         ]));
         $this->assertResponseCode(302);
 
-        $location = $this->_response->getHeaderLine('Location');
+        $location = $this->response->getHeaderLine('Location');
         parse_str((string)parse_url($location, PHP_URL_FRAGMENT), $params);
 
         $this->assertStringStartsWith($redirect . '#', $location);
@@ -292,7 +292,7 @@ class ImplicitGrantTest extends TesseraTestCase
         ]));
         $this->assertResponseCode(302);
 
-        $location = $this->_response->getHeaderLine('Location');
+        $location = $this->response->getHeaderLine('Location');
         parse_str((string)parse_url($location, PHP_URL_FRAGMENT), $params);
 
         $this->assertStringStartsWith($redirect . '#', $location);
@@ -325,7 +325,7 @@ class ImplicitGrantTest extends TesseraTestCase
         $this->assertResponseOk();
         $this->assertNotNull($this->getSession()->read('authRequest'));
         $this->assertNotNull($this->getSession()->read('authToken'));
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertEqualsCanonicalizing(
             ['client', 'user', 'scopes', 'request', 'authToken'],
@@ -359,7 +359,7 @@ class ImplicitGrantTest extends TesseraTestCase
 
         $this->assertResponseCode(302);
         $this->assertTrue((bool)$this->getSession()->read('promptedForLogin'));
-        $this->assertStringContainsString('/login', $this->_response->getHeaderLine('Location'));
+        $this->assertStringContainsString('/login', $this->response->getHeaderLine('Location'));
     }
 
     /**
@@ -367,7 +367,7 @@ class ImplicitGrantTest extends TesseraTestCase
      */
     public function testUnauthorizedClient(): void
     {
-        $client = (new ClientRepository())->createAuthorizationCodeGrantClient(
+        $client = new ClientRepository()->createAuthorizationCodeGrantClient(
             'Auth Code Client',
             ['http://localhost'],
         );
@@ -382,7 +382,7 @@ class ImplicitGrantTest extends TesseraTestCase
         $this->assertResponseCode(400);
         $this->assertNull($this->getSession()->read('authRequest'));
         $this->assertNull($this->getSession()->read('authToken'));
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertSame('unauthorized_client', $json['error']);
         $this->assertSame(
@@ -396,7 +396,7 @@ class ImplicitGrantTest extends TesseraTestCase
      */
     protected function makeImplicitClient(): Client
     {
-        return (new ClientRepository())->createImplicitGrantClient(
+        return new ClientRepository()->createImplicitGrantClient(
             'Implicit Client',
             ['http://localhost'],
         );
@@ -421,14 +421,14 @@ class ImplicitGrantTest extends TesseraTestCase
             'state' => Text::uuid(),
         ]));
         $this->assertResponseOk();
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
 
         $this->syncSession();
         $this->post('/oauth/authorize', ['auth_token' => $json['authToken']]);
         $this->assertResponseCode(302);
 
-        parse_str((string)parse_url($this->_response->getHeaderLine('Location'), PHP_URL_FRAGMENT), $params);
+        parse_str((string)parse_url($this->response->getHeaderLine('Location'), PHP_URL_FRAGMENT), $params);
 
         return $params;
     }

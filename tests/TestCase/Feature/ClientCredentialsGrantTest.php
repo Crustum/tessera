@@ -44,7 +44,7 @@ class ClientCredentialsGrantTest extends TesseraTestCase
      */
     public function testIssueAccessToken(): void
     {
-        $client = (new ClientRepository())->createClientCredentialsGrantClient('Test Client');
+        $client = new ClientRepository()->createClientCredentialsGrantClient('Test Client');
 
         $this->post('/oauth/token', [
             'grant_type' => 'client_credentials',
@@ -54,7 +54,7 @@ class ClientCredentialsGrantTest extends TesseraTestCase
         ]);
 
         $this->assertResponseOk();
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertArrayHasKey('access_token', $json);
         $this->assertArrayNotHasKey('refresh_token', $json);
@@ -79,7 +79,7 @@ class ClientCredentialsGrantTest extends TesseraTestCase
      */
     public function testIssueAccessTokenWithAllScopes(): void
     {
-        $client = (new ClientRepository())->createClientCredentialsGrantClient('Test Client');
+        $client = new ClientRepository()->createClientCredentialsGrantClient('Test Client');
 
         $this->post('/oauth/token', [
             'grant_type' => 'client_credentials',
@@ -89,7 +89,7 @@ class ClientCredentialsGrantTest extends TesseraTestCase
         ]);
 
         $this->assertResponseOk();
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertArrayHasKey('access_token', $json);
         $this->assertArrayNotHasKey('refresh_token', $json);
@@ -121,7 +121,7 @@ class ClientCredentialsGrantTest extends TesseraTestCase
         ]);
 
         $this->assertResponseCode(401);
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertSame('invalid_client', $json['error']);
         $this->assertSame('Client authentication failed', $json['error_description']);
@@ -150,7 +150,7 @@ class ClientCredentialsGrantTest extends TesseraTestCase
         ]);
 
         $this->assertResponseCode(401);
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertSame('invalid_client', $json['error']);
         $this->assertSame('Client authentication failed', $json['error_description']);
@@ -161,7 +161,7 @@ class ClientCredentialsGrantTest extends TesseraTestCase
      */
     public function testUnauthorizedClient(): void
     {
-        $client = (new ClientRepository())->createAuthorizationCodeGrantClient(
+        $client = new ClientRepository()->createAuthorizationCodeGrantClient(
             'Auth Code Client',
             ['http://localhost'],
         );
@@ -173,7 +173,7 @@ class ClientCredentialsGrantTest extends TesseraTestCase
         ]);
 
         $this->assertResponseCode(400);
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertSame('unauthorized_client', $json['error']);
         $this->assertSame(
@@ -189,7 +189,7 @@ class ClientCredentialsGrantTest extends TesseraTestCase
     {
         Tessera::clientCredentialsTokensExpireIn(new DateInterval('P7D'));
 
-        $client = (new ClientRepository())->createClientCredentialsGrantClient('Test Client');
+        $client = new ClientRepository()->createClientCredentialsGrantClient('Test Client');
 
         $this->post('/oauth/token', [
             'grant_type' => 'client_credentials',
@@ -198,7 +198,7 @@ class ClientCredentialsGrantTest extends TesseraTestCase
         ]);
 
         $this->assertResponseOk();
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertEqualsWithDelta(604800, $json['expires_in'], 2);
     }

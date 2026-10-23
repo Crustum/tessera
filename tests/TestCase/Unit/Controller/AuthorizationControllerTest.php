@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Crustum\Tessera\Test\TestCase\Unit\Controller;
 
 use Authentication\IdentityInterface;
+use Cake\Core\Configure;
 use Cake\Http\Response;
 use Cake\Http\ServerRequest;
 use Cake\TestSuite\TestCase;
@@ -13,13 +14,13 @@ use Crustum\Tessera\ClientRepository;
 use Crustum\Tessera\Exception\OAuthServerException;
 use Crustum\Tessera\Model\Entity\Client;
 use Crustum\Tessera\Tessera;
+use JMac\Testing\Double;
+use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
+use JMac\Testing\Matching\Argument;
 use Laminas\Diactoros\Response as PsrResponse;
 use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\Exception\OAuthServerException as LeagueException;
 use League\OAuth2\Server\RequestTypes\AuthorizationRequest;
-use JMac\Testing\Double;
-use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
-use JMac\Testing\Matching\Argument;
 
 /**
  * AuthorizationController unit tests.
@@ -27,6 +28,16 @@ use JMac\Testing\Matching\Argument;
 class AuthorizationControllerTest extends TestCase
 {
     use VerifiesDoubles;
+
+    /**
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Configure::write('App.fullBaseUrl', 'http://localhost');
+    }
 
     /**
      * @return void
@@ -49,7 +60,7 @@ class AuthorizationControllerTest extends TestCase
         ]);
 
         $identity = $this->makeIdentity();
-        $request = (new ServerRequest())->withAttribute('identity', $identity);
+        $request = new ServerRequest()->withAttribute('identity', $identity);
         $client = $this->makeClient(false);
         $clients = $this->makeClientRepository($client);
 
@@ -64,7 +75,7 @@ class AuthorizationControllerTest extends TestCase
         Tessera::authorizationView(static function (array $vars) use (&$viewVars): Response {
             $viewVars = $vars;
 
-            return (new Response())->withStringBody('view');
+            return new Response()->withStringBody('view');
         });
 
         $controller = $this->makeController($request);
@@ -85,7 +96,7 @@ class AuthorizationControllerTest extends TestCase
     public function testAuthorizationExceptionsAreHandled(): void
     {
         $identity = $this->makeIdentity();
-        $request = (new ServerRequest())->withAttribute('identity', $identity);
+        $request = new ServerRequest()->withAttribute('identity', $identity);
         $clients = Double::for(ClientRepository::class);
 
         $server = Double::for(AuthorizationServer::class);
@@ -110,7 +121,7 @@ class AuthorizationControllerTest extends TestCase
         ]);
 
         $identity = $this->makeIdentity();
-        $request = (new ServerRequest())->withAttribute('identity', $identity);
+        $request = new ServerRequest()->withAttribute('identity', $identity);
         $client = $this->makeClient(false);
         $clients = $this->makeClientRepository($client);
 
@@ -151,7 +162,7 @@ class AuthorizationControllerTest extends TestCase
         ]);
 
         $identity = $this->makeIdentity();
-        $request = (new ServerRequest())->withAttribute('identity', $identity);
+        $request = new ServerRequest()->withAttribute('identity', $identity);
         $client = $this->makeClient(true);
         $clients = $this->makeClientRepository($client);
 
@@ -191,9 +202,9 @@ class AuthorizationControllerTest extends TestCase
         ]);
 
         $identity = $this->makeIdentity();
-        $request = (new ServerRequest([
+        $request = new ServerRequest([
             'query' => ['prompt' => 'consent'],
-        ]))->withAttribute('identity', $identity);
+        ])->withAttribute('identity', $identity);
         $client = $this->makeClient(true);
         $clients = $this->makeClientRepository($client);
 
@@ -208,7 +219,7 @@ class AuthorizationControllerTest extends TestCase
         Tessera::authorizationView(static function (array $vars) use (&$viewVars): Response {
             $viewVars = $vars;
 
-            return (new Response())->withStringBody('view');
+            return new Response()->withStringBody('view');
         });
 
         $controller = $this->makeController($request);
@@ -231,9 +242,9 @@ class AuthorizationControllerTest extends TestCase
         ]);
 
         $identity = $this->makeIdentity();
-        $request = (new ServerRequest([
+        $request = new ServerRequest([
             'query' => ['prompt' => 'none'],
-        ]))->withAttribute('identity', $identity);
+        ])->withAttribute('identity', $identity);
         $client = $this->makeClient(false);
         $clients = $this->makeClientRepository($client);
 
@@ -317,10 +328,10 @@ class AuthorizationControllerTest extends TestCase
     public function testLogoutAndPromptLoginIfRequestHasPromptEqualsToLogin(): void
     {
         $identity = $this->makeIdentity();
-        $request = (new ServerRequest([
+        $request = new ServerRequest([
             'query' => ['prompt' => 'login'],
             'url' => '/oauth/authorize?prompt=login',
-        ]))->withAttribute('identity', $identity);
+        ])->withAttribute('identity', $identity);
         $clients = Double::for(ClientRepository::class);
 
         $server = Double::for(AuthorizationServer::class);

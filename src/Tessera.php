@@ -7,6 +7,7 @@ use Cake\Core\Configure;
 use Cake\I18n\DateTime;
 use Cake\ORM\TableRegistry;
 use Closure;
+use Crustum\Tessera\Bridge\AccessToken as BridgeAccessToken;
 use Crustum\Tessera\Contracts\OAuthenticatable;
 use Crustum\Tessera\Model\Entity\AuthCode;
 use Crustum\Tessera\Model\Entity\Client;
@@ -139,28 +140,28 @@ class Tessera
      *
      * @var class-string<\Crustum\Tessera\Bridge\AccessToken>
      */
-    public static string $accessTokenEntity = Bridge\AccessToken::class;
+    public static string $accessTokenEntity = BridgeAccessToken::class;
 
     /**
      * Auth code entity class name.
      *
      * @var class-string<\Crustum\Tessera\Model\Entity\AuthCode>
      */
-    public static string $authCodeModel = Model\Entity\AuthCode::class;
+    public static string $authCodeModel = AuthCode::class;
 
     /**
      * Device code entity class name.
      *
      * @var class-string<\Crustum\Tessera\Model\Entity\DeviceCode>
      */
-    public static string $deviceCodeModel = Model\Entity\DeviceCode::class;
+    public static string $deviceCodeModel = DeviceCode::class;
 
     /**
      * Client entity class name.
      *
      * @var class-string<\Crustum\Tessera\Model\Entity\Client>
      */
-    public static string $clientModel = Model\Entity\Client::class;
+    public static string $clientModel = Client::class;
 
     /**
      * Whether client primary keys are unique IDs.
@@ -178,14 +179,14 @@ class Tessera
      *
      * @var class-string<\Crustum\Tessera\Model\Entity\Token>
      */
-    public static string $tokenModel = Model\Entity\Token::class;
+    public static string $tokenModel = Token::class;
 
     /**
      * Refresh token entity class name.
      *
      * @var class-string<\Crustum\Tessera\Model\Entity\RefreshToken>
      */
-    public static string $refreshTokenModel = Model\Entity\RefreshToken::class;
+    public static string $refreshTokenModel = RefreshToken::class;
 
     /**
      * Whether cookies should be unserialized.

@@ -58,7 +58,7 @@ class PersonalAccessGrantWithTrustedHostsTest extends TesseraTestCase
     public function testIssueToken(): void
     {
         $user = $this->createUser();
-        (new ClientRepository())->createPersonalAccessGrantClient('PAT Client');
+        new ClientRepository()->createPersonalAccessGrantClient('PAT Client');
 
         $result = $user->createToken('test');
 

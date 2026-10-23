@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace Crustum\Tessera\Test\TestCase;
 
+use Cake\Container\Container;
 use Cake\Core\Configure;
-use Cake\Core\Container;
 use Cake\TestSuite\TestCase;
 use Cake\Utility\Security;
 use Crustum\Tessera\ApiTokenCookieFactory;
@@ -15,6 +15,7 @@ use Crustum\Tessera\ServiceProvider\TesseraServiceProvider;
 use Crustum\Tessera\Tessera;
 use Crustum\Tessera\TesseraPlugin;
 use League\OAuth2\Server\AuthorizationServer;
+use League\OAuth2\Server\CryptKey;
 use League\OAuth2\Server\ResourceServer;
 use OpenSSLAsymmetricKey;
 
@@ -82,7 +83,7 @@ class TesseraServiceProviderTest extends TestCase
         Configure::write('Tessera.private_key', $privateKeyString);
 
         $provider = new TesseraServiceProvider();
-        $cryptKey = (fn(): \League\OAuth2\Server\CryptKey => $this->makeCryptKey('private'))->call($provider);
+        $cryptKey = (fn(): CryptKey => $this->makeCryptKey('private'))->call($provider);
 
         $this->assertSame($privateKeyString, $cryptKey->getKeyContents());
     }
@@ -106,7 +107,7 @@ class TesseraServiceProviderTest extends TestCase
         Configure::write('Tessera.private_key');
 
         $provider = new TesseraServiceProvider();
-        $cryptKey = (fn(): \League\OAuth2\Server\CryptKey => $this->makeCryptKey('private'))->call($provider);
+        $cryptKey = (fn(): CryptKey => $this->makeCryptKey('private'))->call($provider);
 
         $this->assertSame($privateKeyString, file_get_contents($cryptKey->getKeyPath()));
     }
@@ -119,7 +120,7 @@ class TesseraServiceProviderTest extends TestCase
         $this->writeKeyPair();
 
         $container = new Container();
-        (new TesseraPlugin())->services($container);
+        new TesseraPlugin()->services($container);
 
         $this->assertInstanceOf(ClientRepository::class, $container->get(ClientRepository::class));
         $this->assertInstanceOf(BridgeClientRepository::class, $container->get(BridgeClientRepository::class));

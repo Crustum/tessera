@@ -4,8 +4,6 @@ declare(strict_types=1);
 namespace Crustum\Tessera\Command;
 
 use Cake\Command\Command;
-use Cake\Console\Arguments;
-use Cake\Console\ConsoleIo;
 use Cake\Console\ConsoleOptionParser;
 use Crustum\Tessera\Model\Entity\Client;
 use Crustum\Tessera\Tessera;
@@ -51,10 +49,10 @@ class HashCommand extends Command
     /**
      * @inheritDoc
      */
-    public function execute(Arguments $args, ConsoleIo $io): ?int
+    public function execute(): ?int
     {
-        if (!$args->getOption('force')) {
-            $confirm = strtolower($io->ask(
+        if (!$this->args->getOption('force')) {
+            $confirm = strtolower($this->io->ask(
                 'Are you sure you want to hash all client secrets? This cannot be undone. (yes/no)',
                 'no',
             ));
@@ -66,7 +64,6 @@ class HashCommand extends Command
         $clients = Tessera::clientsTable()->find()
             ->where(['secret IS NOT' => null])
             ->all();
-
         foreach ($clients as $client) {
             if (!$client instanceof Client) {
                 continue;
@@ -91,7 +88,7 @@ class HashCommand extends Command
             );
         }
 
-        $io->success('All client secrets were successfully hashed.');
+        $this->io->success('All client secrets were successfully hashed.');
 
         return static::CODE_SUCCESS;
     }

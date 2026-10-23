@@ -6,6 +6,7 @@ namespace Crustum\Tessera\Model\Entity;
 use Cake\ORM\Entity;
 use Cake\Validation\Validation;
 use Crustum\Tessera\Trait\ResolvesInheritedScopesTrait;
+use Override;
 
 /**
  * OAuth client entity.
@@ -34,7 +35,7 @@ class Client extends Entity
     /**
      * @var array<string, bool>
      */
-    protected array $_accessible = [
+    protected array $patchable = [
         'owner_id' => true,
         'owner_type' => true,
         'name' => true,
@@ -52,7 +53,8 @@ class Client extends Entity
     /**
      * @var list<string>
      */
-    protected array $_hidden = [
+    #[Override]
+    protected array $hidden = [
         'secret',
     ];
 

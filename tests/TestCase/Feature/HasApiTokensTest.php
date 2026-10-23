@@ -27,8 +27,8 @@ class HasApiTokensTest extends TestCase
             'api-customers' => ['driver' => 'tessera', 'provider' => 'customers'],
         ]);
 
-        $this->assertSame('users', (new UserHasApiTokensStub())->getProviderName());
-        $this->assertSame('admins', (new AdminHasApiTokensStub())->getProviderName());
-        $this->assertSame('customers', (new CustomerHasApiTokensStub())->getProviderName());
+        $this->assertSame('users', new UserHasApiTokensStub()->getProviderName());
+        $this->assertSame('admins', new AdminHasApiTokensStub()->getProviderName());
+        $this->assertSame('customers', new CustomerHasApiTokensStub()->getProviderName());
     }
 }

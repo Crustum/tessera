@@ -4,9 +4,9 @@ declare(strict_types=1);
 namespace Crustum\Tessera;
 
 use Cake\Console\CommandCollection;
+use Cake\Container\ContainerInterface;
 use Cake\Core\BasePlugin;
 use Cake\Core\Configure;
-use Cake\Core\ContainerInterface;
 use Cake\Core\PluginApplicationInterface;
 use Cake\Routing\RouteBuilder;
 use Crustum\Tessera\Command\ClientCommand;
@@ -70,7 +70,6 @@ class TesseraPlugin extends BasePlugin
 
         $routes->plugin(
             $this->getName(),
-            ['path' => $path],
             function (RouteBuilder $builder): void {
                 $builder->post(
                     '/token',
@@ -126,13 +125,14 @@ class TesseraPlugin extends BasePlugin
                     );
                 }
             },
+            ['path' => $path],
         );
     }
 
     /**
      * Attach Tessera DI via Cake ServiceProvider.
      *
-     * @param \Cake\Core\ContainerInterface $container DI container
+     * @param \Cake\Container\ContainerInterface $container DI container
      * @return void
      */
     public function services(ContainerInterface $container): void

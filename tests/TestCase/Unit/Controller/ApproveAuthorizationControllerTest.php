@@ -6,12 +6,12 @@ namespace Crustum\Tessera\Test\TestCase\Unit\Controller;
 use Cake\Http\ServerRequest;
 use Cake\TestSuite\TestCase;
 use Crustum\Tessera\Controller\ApproveAuthorizationController;
-use Laminas\Diactoros\Response as PsrResponse;
-use League\OAuth2\Server\AuthorizationServer;
-use League\OAuth2\Server\RequestTypes\AuthorizationRequest;
 use JMac\Testing\Double;
 use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
 use JMac\Testing\Matching\Argument;
+use Laminas\Diactoros\Response as PsrResponse;
+use League\OAuth2\Server\AuthorizationServer;
+use League\OAuth2\Server\RequestTypes\AuthorizationRequest;
 
 /**
  * ApproveAuthorizationController unit tests.

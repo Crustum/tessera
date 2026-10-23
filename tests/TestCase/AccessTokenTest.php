@@ -107,7 +107,7 @@ class AccessTokenTest extends TestCase
     {
         $token = new AccessToken();
 
-        $inheritedScopes = (fn (): array => $this->resolveInheritedScopes('admin:webhooks:read'))->call($token);
+        $inheritedScopes = (fn(): array => $this->resolveInheritedScopes('admin:webhooks:read'))->call($token);
 
         $this->assertSame([
             'admin',

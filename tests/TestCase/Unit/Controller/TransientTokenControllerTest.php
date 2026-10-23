@@ -31,7 +31,7 @@ class TransientTokenControllerTest extends TestCase
         $user = Double::for(OAuthenticatable::class);
         $user->allows('getIdentifier')->returns(1);
 
-        $request = (new ServerRequest())
+        $request = new ServerRequest()
             ->withAttribute('identity', $user)
             ->withAttribute('csrfToken', 'token');
 
@@ -55,7 +55,7 @@ class TransientTokenControllerTest extends TestCase
         $user = Double::for(OAuthenticatable::class);
         $user->allows('getIdentifier')->returns(1);
 
-        $request = (new ServerRequest())->withAttribute('identity', $user);
+        $request = new ServerRequest()->withAttribute('identity', $user);
 
         $controller = new TransientTokenController($request);
         $controller->setRequest($request);

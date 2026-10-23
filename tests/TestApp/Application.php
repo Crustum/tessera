@@ -7,21 +7,21 @@ use Authentication\AuthenticationService;
 use Authentication\AuthenticationServiceInterface;
 use Authentication\AuthenticationServiceProviderInterface;
 use Authentication\Middleware\AuthenticationMiddleware;
-use Cake\Core\ContainerInterface;
+use Cake\Container\ContainerInterface;
 use Cake\Http\BaseApplication;
 use Cake\Http\Middleware\BodyParserMiddleware;
 use Cake\Http\MiddlewareQueue;
 use Cake\Routing\Middleware\RoutingMiddleware;
 use Cake\Routing\RouteBuilder;
+use Crustum\Tessera\ApiTokenCookieFactory;
 use Crustum\Tessera\Authenticator\TokenAuthenticator;
-use Crustum\Tessera\Support\AuthenticationCompat;
 use Crustum\Tessera\Middleware\CheckTokenForAnyScopeMiddleware;
 use Crustum\Tessera\Middleware\CheckTokenMiddleware;
 use Crustum\Tessera\Middleware\ConvertOAuthExceptionsMiddleware;
 use Crustum\Tessera\Middleware\CreateFreshApiTokenMiddleware;
 use Crustum\Tessera\Middleware\EnsureClientIsResourceOwnerMiddleware;
+use Crustum\Tessera\Support\AuthenticationCompat;
 use Crustum\Tessera\TesseraPlugin;
-use Crustum\Tessera\ApiTokenCookieFactory;
 use League\OAuth2\Server\ResourceServer;
 use Psr\Http\Message\ServerRequestInterface;
 use TestApp\Middleware\CsrfHeaderMiddleware;
@@ -168,7 +168,7 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
     /**
      * Register container services (plugin ServiceProviders attach via addPlugin).
      *
-     * @param \Cake\Core\ContainerInterface $container DI container
+     * @param \Cake\Container\ContainerInterface $container DI container
      * @return void
      */
     public function services(ContainerInterface $container): void

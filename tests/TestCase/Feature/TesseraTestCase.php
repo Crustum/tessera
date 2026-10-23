@@ -12,6 +12,12 @@ use Cake\TestSuite\TestCase;
 use Cake\Utility\Security;
 use Cake\Utility\Text;
 use Crustum\Tessera\Tessera;
+use Crustum\Tessera\Test\Fixture\OauthAccessTokensFixture;
+use Crustum\Tessera\Test\Fixture\OauthAuthCodesFixture;
+use Crustum\Tessera\Test\Fixture\OauthClientsFixture;
+use Crustum\Tessera\Test\Fixture\OauthDeviceCodesFixture;
+use Crustum\Tessera\Test\Fixture\OauthRefreshTokensFixture;
+use Crustum\Tessera\Test\Fixture\UsersFixture;
 use OpenSSLAsymmetricKey;
 use TestApp\Application;
 use TestApp\Model\Entity\User;
@@ -27,12 +33,12 @@ abstract class TesseraTestCase extends TestCase
      * @var list<string>
      */
     protected array $fixtures = [
-        \Crustum\Tessera\Test\Fixture\UsersFixture::class,
-        \Crustum\Tessera\Test\Fixture\OauthClientsFixture::class,
-        \Crustum\Tessera\Test\Fixture\OauthAuthCodesFixture::class,
-        \Crustum\Tessera\Test\Fixture\OauthAccessTokensFixture::class,
-        \Crustum\Tessera\Test\Fixture\OauthRefreshTokensFixture::class,
-        \Crustum\Tessera\Test\Fixture\OauthDeviceCodesFixture::class,
+        UsersFixture::class,
+        OauthClientsFixture::class,
+        OauthAuthCodesFixture::class,
+        OauthAccessTokensFixture::class,
+        OauthRefreshTokensFixture::class,
+        OauthDeviceCodesFixture::class,
     ];
 
     public const KEYS = TESTS . 'keys';
@@ -217,6 +223,6 @@ abstract class TesseraTestCase extends TestCase
      */
     protected function clearSession(): void
     {
-        $this->_session = [];
+        $this->session = [];
     }
 }

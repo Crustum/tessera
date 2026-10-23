@@ -120,12 +120,7 @@ class CreateFreshApiTokenMiddleware implements MiddlewareInterface
         }
 
         $prefix = Tessera::cookie() . '=';
-        foreach ($response->getHeader('Set-Cookie') as $cookieHeader) {
-            if (str_starts_with($cookieHeader, $prefix)) {
-                return true;
-            }
-        }
 
-        return false;
+        return array_any($response->getHeader('Set-Cookie'), fn(string $cookieHeader): bool => str_starts_with($cookieHeader, $prefix));
     }
 }

@@ -29,7 +29,7 @@ class CreateFreshApiTokenTest extends TesseraTestCase
         $this->get('/whoami');
         $this->assertResponseOk();
 
-        $info = json_decode((string)$this->_response->getBody(), true);
+        $info = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($info);
         $this->assertEquals($user->id, $info['id']);
     }
@@ -84,7 +84,7 @@ class CreateFreshApiTokenTest extends TesseraTestCase
         $this->get('/fresh-existing');
         $this->assertResponseOk();
 
-        $cookie = $this->_response->getCookie(Tessera::cookie());
+        $cookie = $this->response->getCookie(Tessera::cookie());
         $this->assertIsArray($cookie);
         $this->assertSame('existing', $cookie['value'] ?? null);
         $this->assertSame([], $this->freshCookies());
@@ -101,7 +101,7 @@ class CreateFreshApiTokenTest extends TesseraTestCase
     protected function freshCookies(): array
     {
         $found = [];
-        foreach ($this->_response->getHeader('Set-Cookie') as $header) {
+        foreach ($this->response->getHeader('Set-Cookie') as $header) {
             if (str_starts_with($header, Tessera::cookie() . '=')) {
                 $found[] = $header;
             }

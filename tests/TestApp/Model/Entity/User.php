@@ -7,6 +7,7 @@ use Authentication\PasswordHasher\DefaultPasswordHasher;
 use Cake\ORM\Entity;
 use Crustum\Tessera\Contracts\OAuthenticatable;
 use Crustum\Tessera\Trait\HasApiTokensTrait;
+use Override;
 
 /**
  * Test application user.
@@ -20,9 +21,9 @@ class User extends Entity implements OAuthenticatable
     use HasApiTokensTrait;
 
     /**
-     * @var list<string>
+     * @var array<string, bool>
      */
-    protected array $_accessible = [
+    protected array $patchable = [
         'email' => true,
         'password' => true,
     ];
@@ -30,7 +31,8 @@ class User extends Entity implements OAuthenticatable
     /**
      * @var list<string>
      */
-    protected array $_hidden = [
+    #[Override]
+    protected array $hidden = [
         'password',
     ];
 
@@ -50,6 +52,6 @@ class User extends Entity implements OAuthenticatable
      */
     protected function _setPassword(string $password): string
     {
-        return (new DefaultPasswordHasher())->hash($password);
+        return new DefaultPasswordHasher()->hash($password);
     }
 }

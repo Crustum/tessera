@@ -74,15 +74,15 @@ class TokenGuardTest extends TesseraTestCase
     public function testUserCanBePulledViaBearerToken(): void
     {
         $user = $this->createUser();
-        (new ClientRepository())->createPersonalAccessGrantClient('PAT Client');
-        $client = (new ClientRepository())->personalAccessClient('users');
+        new ClientRepository()->createPersonalAccessGrantClient('PAT Client');
+        $client = new ClientRepository()->personalAccessClient('users');
         $result = $user->createToken('test');
 
         $this->withBearerToken($result->accessToken);
         $this->get('/guard');
         $this->assertResponseOk();
 
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertEquals($user->id, $json['user']);
         $this->assertSame($result->accessTokenId, $json['token']);
@@ -95,18 +95,18 @@ class TokenGuardTest extends TesseraTestCase
     public function testUserAndClientAreResolvedOnRepeatedRequests(): void
     {
         $user = $this->createUser();
-        (new ClientRepository())->createPersonalAccessGrantClient('PAT Client');
+        new ClientRepository()->createPersonalAccessGrantClient('PAT Client');
         $result = $user->createToken('test');
 
         $this->withBearerToken($result->accessToken);
         $this->get('/guard');
         $this->assertResponseOk();
-        $first = (string)$this->_response->getBody();
+        $first = (string)$this->response->getBody();
 
         $this->withBearerToken($result->accessToken);
         $this->get('/guard');
         $this->assertResponseOk();
-        $this->assertSame($first, (string)$this->_response->getBody());
+        $this->assertSame($first, (string)$this->response->getBody());
     }
 
     /**
@@ -124,7 +124,7 @@ class TokenGuardTest extends TesseraTestCase
     public function testNullIsReturnedIfNoUserIsFound(): void
     {
         $user = $this->createUser();
-        (new ClientRepository())->createPersonalAccessGrantClient('PAT Client');
+        new ClientRepository()->createPersonalAccessGrantClient('PAT Client');
         $result = $user->createToken('test');
 
         $users = TableRegistry::getTableLocator()->get('Users');
@@ -139,7 +139,7 @@ class TokenGuardTest extends TesseraTestCase
      */
     public function testNullIsReturnedForClientCredentialsToken(): void
     {
-        $client = (new ClientRepository())->createClientCredentialsGrantClient('Test Client');
+        $client = new ClientRepository()->createClientCredentialsGrantClient('Test Client');
 
         $this->post('/oauth/token', [
             'grant_type' => 'client_credentials',
@@ -148,7 +148,7 @@ class TokenGuardTest extends TesseraTestCase
             'scope' => 'create delete',
         ]);
         $this->assertResponseOk();
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
 
         $this->withBearerToken((string)$json['access_token']);
@@ -184,7 +184,7 @@ class TokenGuardTest extends TesseraTestCase
     public function testUnauthorizedForRevokedToken(): void
     {
         $user = $this->createUser();
-        (new ClientRepository())->createPersonalAccessGrantClient('PAT Client');
+        new ClientRepository()->createPersonalAccessGrantClient('PAT Client');
         $result = $user->createToken('test');
 
         $token = $result->getToken();

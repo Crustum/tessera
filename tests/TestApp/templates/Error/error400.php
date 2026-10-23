@@ -2,4 +2,4 @@
 /**
  * @var string $message
  */
-echo h($message ?? '');
+echo h($message);

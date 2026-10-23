@@ -46,7 +46,7 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
      */
     public function testIssueDeviceCode(): void
     {
-        $client = (new ClientRepository())->createDeviceAuthorizationGrantClient('Device Client');
+        $client = new ClientRepository()->createDeviceAuthorizationGrantClient('Device Client');
 
         $this->post('/oauth/device/code', [
             'client_id' => $client->id,
@@ -54,7 +54,7 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
         ]);
         $this->assertResponseOk();
 
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertArrayHasKey('device_code', $json);
         $this->assertArrayHasKey('user_code', $json);
@@ -72,14 +72,14 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
      */
     public function testRequestAccessTokenAuthorizationPending(): void
     {
-        $client = (new ClientRepository())->createDeviceAuthorizationGrantClient('Device Client');
+        $client = new ClientRepository()->createDeviceAuthorizationGrantClient('Device Client');
 
         $this->post('/oauth/device/code', [
             'client_id' => $client->id,
             'scope' => 'create read',
         ]);
         $this->assertResponseOk();
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertSame(5, $json['interval']);
         $deviceCode = $json['device_code'];
@@ -91,7 +91,7 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
             'device_code' => $deviceCode,
         ]);
         $this->assertResponseCode(400);
-        $pending = json_decode((string)$this->_response->getBody(), true);
+        $pending = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($pending);
         $this->assertSame('authorization_pending', $pending['error']);
         $this->assertArrayHasKey('error_description', $pending);
@@ -103,7 +103,7 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
             'device_code' => $deviceCode,
         ]);
         $this->assertResponseCode(400);
-        $slow = json_decode((string)$this->_response->getBody(), true);
+        $slow = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($slow);
         $this->assertSame('slow_down', $slow['error']);
         $this->assertArrayHasKey('error_description', $slow);
@@ -117,7 +117,7 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
         $this->loginAs($this->createUser());
         $this->get('/oauth/device/authorize');
         $this->assertResponseCode(302);
-        $this->assertStringContainsString('/oauth/device', $this->_response->getHeaderLine('Location'));
+        $this->assertStringContainsString('/oauth/device', $this->response->getHeaderLine('Location'));
     }
 
     /**
@@ -125,19 +125,19 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
      */
     public function testVerificationUrl(): void
     {
-        $client = (new ClientRepository())->createDeviceAuthorizationGrantClient('Device Client');
+        $client = new ClientRepository()->createDeviceAuthorizationGrantClient('Device Client');
 
         $this->post('/oauth/device/code', [
             'client_id' => $client->id,
             'scope' => 'create read',
         ]);
         $this->assertResponseOk();
-        $issued = json_decode((string)$this->_response->getBody(), true);
+        $issued = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($issued);
 
         $this->get($issued['verification_uri']);
         $this->assertResponseOk();
-        $entry = json_decode((string)$this->_response->getBody(), true);
+        $entry = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($entry);
         $this->assertEqualsCanonicalizing(['request'], array_keys($entry));
 
@@ -146,7 +146,7 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
         $this->assertResponseCode(302);
         $this->assertStringContainsString(
             '/oauth/device/authorize?user_code=' . $issued['user_code'],
-            $this->_response->getHeaderLine('Location'),
+            $this->response->getHeaderLine('Location'),
         );
 
         $formatted = substr_replace((string)$issued['user_code'], '-', 4, 0);
@@ -166,7 +166,7 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
 
         $this->get('/oauth/device/authorize?user_code=12345678');
         $this->assertResponseCode(302);
-        $location = $this->_response->getHeaderLine('Location');
+        $location = $this->response->getHeaderLine('Location');
         $this->assertStringContainsString('/oauth/device', $location);
         parse_str((string)parse_url($location, PHP_URL_QUERY), $params);
         $this->assertSame('12345678', $params['user_code'] ?? null);
@@ -174,7 +174,7 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
 
         $this->get('/oauth/device/authorize?user_code=ABCD-EFGH');
         $this->assertResponseCode(302);
-        $location = $this->_response->getHeaderLine('Location');
+        $location = $this->response->getHeaderLine('Location');
         parse_str((string)parse_url($location, PHP_URL_QUERY), $params);
         $this->assertSame('ABCD-EFGH', $params['user_code'] ?? null);
         $this->assertSame('invalid_code', $params['error'] ?? null);
@@ -185,14 +185,14 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
      */
     public function testIssueAccessToken(): void
     {
-        $client = (new ClientRepository())->createDeviceAuthorizationGrantClient('Device Client');
+        $client = new ClientRepository()->createDeviceAuthorizationGrantClient('Device Client');
 
         $this->post('/oauth/device/code', [
             'client_id' => $client->id,
             'scope' => 'create read',
         ]);
         $this->assertResponseOk();
-        $issued = json_decode((string)$this->_response->getBody(), true);
+        $issued = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($issued);
 
         $user = $this->createUser();
@@ -201,7 +201,7 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
         $this->assertResponseOk();
         $this->assertNotNull($this->getSession()->read('deviceCode'));
         $this->assertNotNull($this->getSession()->read('authToken'));
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertEqualsCanonicalizing(
             ['client', 'user', 'scopes', 'request', 'authToken'],
@@ -218,7 +218,7 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
         $this->syncSession();
         $this->post('/oauth/device/authorize', ['auth_token' => $json['authToken']]);
         $this->assertResponseCode(302);
-        $location = $this->_response->getHeaderLine('Location');
+        $location = $this->response->getHeaderLine('Location');
         $this->assertStringContainsString('/oauth/device', $location);
         $this->assertStringContainsString('status=authorization-approved', $location);
         $this->assertNull($this->getSession()->read('deviceCode'));
@@ -227,7 +227,7 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
         $this->syncSession();
         $this->get('/oauth/device/authorize?user_code=' . $issued['user_code']);
         $this->assertResponseCode(302);
-        parse_str((string)parse_url($this->_response->getHeaderLine('Location'), PHP_URL_QUERY), $params);
+        parse_str((string)parse_url($this->response->getHeaderLine('Location'), PHP_URL_QUERY), $params);
         $this->assertSame($issued['user_code'], $params['user_code'] ?? null);
         $this->assertSame('invalid_code', $params['error'] ?? null);
 
@@ -238,7 +238,7 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
             'device_code' => $issued['device_code'],
         ]);
         $this->assertResponseOk();
-        $tokenJson = json_decode((string)$this->_response->getBody(), true);
+        $tokenJson = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($tokenJson);
         $this->assertArrayHasKey('access_token', $tokenJson);
         $this->assertArrayHasKey('refresh_token', $tokenJson);
@@ -253,7 +253,7 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
         ]);
         $this->get('/token-info');
         $this->assertResponseOk();
-        $info = json_decode((string)$this->_response->getBody(), true);
+        $info = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($info);
         $this->assertSame($client->id, $info['oauth_client_id']);
         $this->assertEquals($user->id, $info['oauth_user_id']);
@@ -265,26 +265,26 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
      */
     public function testDenyAuthorization(): void
     {
-        $client = (new ClientRepository())->createDeviceAuthorizationGrantClient('Device Client');
+        $client = new ClientRepository()->createDeviceAuthorizationGrantClient('Device Client');
 
         $this->post('/oauth/device/code', [
             'client_id' => $client->id,
             'scope' => 'create read',
         ]);
         $this->assertResponseOk();
-        $issued = json_decode((string)$this->_response->getBody(), true);
+        $issued = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($issued);
 
         $this->loginAs($this->createUser());
         $this->get('/oauth/device/authorize?user_code=' . $issued['user_code']);
         $this->assertResponseOk();
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
 
         $this->syncSession();
-        $this->_sendRequest('/oauth/device/authorize', 'DELETE', ['auth_token' => $json['authToken']]);
+        $this->sendRequest('/oauth/device/authorize', 'DELETE', ['auth_token' => $json['authToken']]);
         $this->assertResponseCode(302);
-        $location = $this->_response->getHeaderLine('Location');
+        $location = $this->response->getHeaderLine('Location');
         $this->assertStringContainsString('/oauth/device', $location);
         $this->assertStringContainsString('status=authorization-denied', $location);
         $this->assertNull($this->getSession()->read('deviceCode'));
@@ -293,7 +293,7 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
         $this->syncSession();
         $this->get('/oauth/device/authorize?user_code=' . $issued['user_code']);
         $this->assertResponseCode(302);
-        parse_str((string)parse_url($this->_response->getHeaderLine('Location'), PHP_URL_QUERY), $params);
+        parse_str((string)parse_url($this->response->getHeaderLine('Location'), PHP_URL_QUERY), $params);
         $this->assertSame('invalid_code', $params['error'] ?? null);
 
         $this->post('/oauth/token', [
@@ -303,7 +303,7 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
             'device_code' => $issued['device_code'],
         ]);
         $this->assertResponseCode(401);
-        $denied = json_decode((string)$this->_response->getBody(), true);
+        $denied = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($denied);
         $this->assertSame('access_denied', $denied['error']);
         $this->assertArrayHasKey('error_description', $denied);
@@ -314,14 +314,14 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
      */
     public function testDeviceCodeSerialization(): void
     {
-        $client = (new ClientRepository())->createDeviceAuthorizationGrantClient('Device Client');
+        $client = new ClientRepository()->createDeviceAuthorizationGrantClient('Device Client');
 
         $this->post('/oauth/device/code', [
             'client_id' => $client->id,
             'scope' => 'create read',
         ]);
         $this->assertResponseOk();
-        $issued = json_decode((string)$this->_response->getBody(), true);
+        $issued = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($issued);
 
         $this->loginAs($this->createUser());
@@ -329,7 +329,7 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
         $this->assertResponseOk();
         $this->assertNotNull($this->getSession()->read('deviceCode'));
         $this->assertNotNull($this->getSession()->read('authToken'));
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertEqualsCanonicalizing(
             ['client', 'user', 'scopes', 'request', 'authToken'],
@@ -339,7 +339,7 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
         $this->syncSession();
         $this->post('/oauth/device/authorize', ['auth_token' => $json['authToken']]);
         $this->assertResponseCode(302);
-        $this->assertStringContainsString('status=authorization-approved', $this->_response->getHeaderLine('Location'));
+        $this->assertStringContainsString('status=authorization-approved', $this->response->getHeaderLine('Location'));
         $this->assertNull($this->getSession()->read('deviceCode'));
         $this->assertNull($this->getSession()->read('authToken'));
     }
@@ -349,20 +349,20 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
      */
     public function testPublicClient(): void
     {
-        $client = (new ClientRepository())->createDeviceAuthorizationGrantClient('Public Device', false);
+        $client = new ClientRepository()->createDeviceAuthorizationGrantClient('Public Device', false);
 
         $this->post('/oauth/device/code', [
             'client_id' => $client->id,
             'scope' => 'create read',
         ]);
         $this->assertResponseOk();
-        $issued = json_decode((string)$this->_response->getBody(), true);
+        $issued = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($issued);
 
         $this->loginAs($this->createUser());
         $this->get('/oauth/device/authorize?user_code=' . $issued['user_code']);
         $this->assertResponseOk();
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
 
         $this->syncSession();
@@ -375,7 +375,7 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
             'device_code' => $issued['device_code'],
         ]);
         $this->assertResponseOk();
-        $tokenJson = json_decode((string)$this->_response->getBody(), true);
+        $tokenJson = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($tokenJson);
         $this->assertArrayHasKey('access_token', $tokenJson);
         $this->assertArrayHasKey('refresh_token', $tokenJson);
@@ -388,7 +388,7 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
      */
     public function testUnauthorizedClient(): void
     {
-        $client = (new ClientRepository())->createAuthorizationCodeGrantClient(
+        $client = new ClientRepository()->createAuthorizationCodeGrantClient(
             'Auth Code Client',
             ['http://localhost'],
         );
@@ -397,7 +397,7 @@ class DeviceAuthorizationGrantTest extends TesseraTestCase
             'client_id' => $client->id,
         ]);
         $this->assertResponseCode(400);
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertSame('unauthorized_client', $json['error']);
         $this->assertArrayHasKey('error_description', $json);

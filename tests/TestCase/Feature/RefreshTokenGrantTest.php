@@ -65,7 +65,7 @@ class RefreshTokenGrantTest extends TesseraTestCase
         ]);
         $this->assertResponseOk();
 
-        $newToken = json_decode((string)$this->_response->getBody(), true);
+        $newToken = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($newToken);
         $this->assertArrayHasKey('access_token', $newToken);
         $this->assertArrayHasKey('refresh_token', $newToken);
@@ -89,7 +89,7 @@ class RefreshTokenGrantTest extends TesseraTestCase
         $this->get('/token-info');
         $this->assertResponseOk();
 
-        $info = json_decode((string)$this->_response->getBody(), true);
+        $info = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($info);
         $this->assertSame(['read', 'delete'], $info['oauth_scopes']);
 
@@ -101,7 +101,7 @@ class RefreshTokenGrantTest extends TesseraTestCase
         ]);
         $this->assertResponseCode(400);
 
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertSame('invalid_grant', $json['error']);
         $this->assertSame('The refresh token is invalid.', $json['error_description']);
@@ -128,7 +128,7 @@ class RefreshTokenGrantTest extends TesseraTestCase
         ]);
         $this->assertResponseOk();
 
-        $newToken = json_decode((string)$this->_response->getBody(), true);
+        $newToken = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($newToken);
         $this->assertArrayHasKey('access_token', $newToken);
         $this->assertArrayHasKey('refresh_token', $newToken);
@@ -152,7 +152,7 @@ class RefreshTokenGrantTest extends TesseraTestCase
         $this->get('/token-info');
         $this->assertResponseOk();
 
-        $info = json_decode((string)$this->_response->getBody(), true);
+        $info = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($info);
         $this->assertSame(['read', 'delete'], $info['oauth_scopes']);
 
@@ -164,7 +164,7 @@ class RefreshTokenGrantTest extends TesseraTestCase
         ]);
         $this->assertResponseOk();
 
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertArrayHasKey('access_token', $json);
         $this->assertArrayHasKey('refresh_token', $json);
@@ -228,7 +228,7 @@ class RefreshTokenGrantTest extends TesseraTestCase
         ]);
         $this->assertResponseCode(400);
 
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertSame('invalid_scope', $json['error']);
         $this->assertSame('The requested scope is invalid, unknown, or malformed', $json['error_description']);
@@ -240,7 +240,7 @@ class RefreshTokenGrantTest extends TesseraTestCase
      */
     protected function makeAuthCodeClient(): Client
     {
-        return (new ClientRepository())->createAuthorizationCodeGrantClient(
+        return new ClientRepository()->createAuthorizationCodeGrantClient(
             'Auth Code Client',
             ['http://localhost'],
         );
@@ -265,13 +265,13 @@ class RefreshTokenGrantTest extends TesseraTestCase
             'scope' => 'create read delete',
         ]));
         $this->assertResponseOk();
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
 
         $this->syncSession();
         $this->post('/oauth/authorize', ['auth_token' => $json['authToken']]);
         $this->assertResponseCode(302);
-        parse_str((string)parse_url($this->_response->getHeaderLine('Location'), PHP_URL_QUERY), $params);
+        parse_str((string)parse_url($this->response->getHeaderLine('Location'), PHP_URL_QUERY), $params);
 
         $this->post('/oauth/token', [
             'grant_type' => 'authorization_code',
@@ -282,7 +282,7 @@ class RefreshTokenGrantTest extends TesseraTestCase
         ]);
         $this->assertResponseOk();
 
-        $token = json_decode((string)$this->_response->getBody(), true);
+        $token = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($token);
 
         return $token;

@@ -12,10 +12,10 @@ use Crustum\Tessera\Exception\AuthenticationException;
 use Crustum\Tessera\Exception\MissingScopeException;
 use Crustum\Tessera\Middleware\CheckTokenForAnyScopeMiddleware;
 use Crustum\Tessera\TransientToken;
-use League\OAuth2\Server\Exception\OAuthServerException;
-use League\OAuth2\Server\ResourceServer;
 use JMac\Testing\Double;
 use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
+use League\OAuth2\Server\Exception\OAuthServerException;
+use League\OAuth2\Server\ResourceServer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -43,7 +43,7 @@ class CheckTokenForAnyScopeMiddlewareTest extends TestCase
         ]);
 
         $middleware = new CheckTokenForAnyScopeMiddleware($resourceServer, ['notfoo']);
-        $request = (new ServerRequest())->withHeader('Authorization', 'Bearer token');
+        $request = new ServerRequest()->withHeader('Authorization', 'Bearer token');
         $response = new Response(['body' => 'response']);
 
         $result = $middleware->process($request, $this->makeHandler($response));
@@ -63,7 +63,7 @@ class CheckTokenForAnyScopeMiddlewareTest extends TestCase
         $resourceServer->expects('validateAuthenticatedRequest')->never();
 
         $middleware = new CheckTokenForAnyScopeMiddleware($resourceServer, ['notfoo']);
-        $request = (new ServerRequest())
+        $request = new ServerRequest()
             ->withHeader('Authorization', 'Bearer token')
             ->withAttribute('identity', $user);
         $response = new Response(['body' => 'response']);
@@ -89,7 +89,7 @@ class CheckTokenForAnyScopeMiddlewareTest extends TestCase
         ]);
 
         $middleware = new CheckTokenForAnyScopeMiddleware($resourceServer, ['notfoo', 'bar', 'notbaz']);
-        $request = (new ServerRequest())->withHeader('Authorization', 'Bearer token');
+        $request = new ServerRequest()->withHeader('Authorization', 'Bearer token');
         $response = new Response(['body' => 'response']);
 
         $result = $middleware->process($request, $this->makeHandler($response));
@@ -110,7 +110,7 @@ class CheckTokenForAnyScopeMiddlewareTest extends TestCase
         );
 
         $middleware = new CheckTokenForAnyScopeMiddleware($resourceServer);
-        $request = (new ServerRequest())->withHeader('Authorization', 'Bearer token');
+        $request = new ServerRequest()->withHeader('Authorization', 'Bearer token');
 
         $middleware->process($request, $this->makeUnusedHandler());
     }
@@ -133,7 +133,7 @@ class CheckTokenForAnyScopeMiddlewareTest extends TestCase
         ]);
 
         $middleware = new CheckTokenForAnyScopeMiddleware($resourceServer, ['baz', 'notbar']);
-        $request = (new ServerRequest())->withHeader('Authorization', 'Bearer token');
+        $request = new ServerRequest()->withHeader('Authorization', 'Bearer token');
 
         $middleware->process($request, $this->makeUnusedHandler());
     }

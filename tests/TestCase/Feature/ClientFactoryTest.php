@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace Crustum\Tessera\Test\TestCase\Feature;
 
 use Crustum\Tessera\Model\Entity\Client;
-use Crustum\Tessera\Test\Factory\ClientFactory;
 use Crustum\Tessera\Tessera;
+use Crustum\Tessera\Test\Factory\ClientFactory;
 
 /**
  * ClientFactory persist coverage (cakephp-fixture-factories + oauth fixtures).

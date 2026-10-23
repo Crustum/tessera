@@ -4,8 +4,6 @@ declare(strict_types=1);
 namespace Crustum\Tessera\Command;
 
 use Cake\Command\Command;
-use Cake\Console\Arguments;
-use Cake\Console\ConsoleIo;
 use Cake\Console\ConsoleOptionParser;
 use Cake\Database\Expression\QueryExpression;
 use Cake\Database\Query\SelectQuery as DbSelectQuery;
@@ -62,25 +60,21 @@ class PurgeCommand extends Command
     /**
      * @inheritDoc
      */
-    public function execute(Arguments $args, ConsoleIo $io): ?int
+    public function execute(): ?int
     {
-        $revokedOnly = (bool)$args->getOption('revoked');
-        $expiredOnly = (bool)$args->getOption('expired');
+        $revokedOnly = (bool)$this->args->getOption('revoked');
+        $expiredOnly = (bool)$this->args->getOption('expired');
         $purgeRevoked = $revokedOnly || !$expiredOnly;
         $purgeExpired = $expiredOnly || !$revokedOnly;
-
         $expiredBefore = $purgeExpired
-            ? DateTime::now()->subHours((int)$args->getOption('hours'))
+            ? DateTime::now()->subHours((int)$this->args->getOption('hours'))
             : null;
-
         $conditions = $this->purgeConditions($purgeRevoked, $expiredBefore);
-
         Tessera::tokensTable()->deleteAll(
             fn(QueryExpression $exp): QueryExpression => $exp->add($conditions)->notExists($this->activeRefreshTokens()),
         );
         Tessera::authCodesTable()->deleteAll($conditions);
         Tessera::refreshTokensTable()->deleteAll($conditions);
-
         if (Tessera::$deviceCodeGrantEnabled) {
             Tessera::deviceCodesTable()->deleteAll($conditions);
         }
@@ -91,8 +85,7 @@ class PurgeCommand extends Command
                 ? 'items expired for more than ' . $expiredBefore->diffForHumans(null, true)
                 : null,
         ]);
-
-        $io->success('Purged ' . implode(' and ', $parts) . '.');
+        $this->io->success('Purged ' . implode(' and ', $parts) . '.');
 
         return static::CODE_SUCCESS;
     }

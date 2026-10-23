@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Crustum\Tessera\Test\TestCase\Unit\Controller;
 
+use Closure;
 use Crustum\Tessera\Controller\Trait\HandlesOAuthErrorsTrait;
 
 /**
@@ -18,7 +19,7 @@ class HandlesOAuthErrorsTraitTestStub
      * @param \Closure(): mixed $callback Callback to execute
      * @return mixed
      */
-    public function test(\Closure $callback): mixed
+    public function test(Closure $callback): mixed
     {
         return $this->withErrorHandling($callback);
     }

@@ -5,6 +5,7 @@ namespace TestApp\Model\Table;
 
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
+use TestApp\Model\Entity\User;
 
 /**
  * Test application users table.
@@ -24,7 +25,7 @@ class UsersTable extends Table
         $this->setTable('users');
         $this->setDisplayField('email');
         $this->setPrimaryKey('id');
-        $this->setEntityClass(\TestApp\Model\Entity\User::class);
+        $this->setEntityClass(User::class);
     }
 
     /**

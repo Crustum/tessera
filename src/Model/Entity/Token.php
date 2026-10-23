@@ -27,7 +27,7 @@ class Token extends Entity implements ScopeAuthorizable
     /**
      * @var array<string, bool>
      */
-    protected array $_accessible = [
+    protected array $patchable = [
         'user_id' => true,
         'client_id' => true,
         'name' => true,
@@ -63,7 +63,7 @@ class Token extends Entity implements ScopeAuthorizable
      *
      * @return $this
      */
-    public function markRevoked()
+    public function markRevoked(): static
     {
         $this->set('revoked', true);
 

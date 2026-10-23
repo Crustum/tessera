@@ -67,7 +67,7 @@ class AuthorizationCodeGrantWithPkceTest extends TesseraTestCase
         ]));
 
         $this->assertResponseOk();
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertEqualsCanonicalizing(
             ['client', 'user', 'scopes', 'request', 'authToken'],
@@ -87,7 +87,7 @@ class AuthorizationCodeGrantWithPkceTest extends TesseraTestCase
         $this->assertNull($this->getSession()->read('authRequest'));
         $this->assertNull($this->getSession()->read('authToken'));
 
-        $location = $this->_response->getHeaderLine('Location');
+        $location = $this->response->getHeaderLine('Location');
         parse_str((string)parse_url($location, PHP_URL_QUERY), $params);
 
         $this->assertStringStartsWith($redirect . '?', $location);
@@ -103,7 +103,7 @@ class AuthorizationCodeGrantWithPkceTest extends TesseraTestCase
         ]);
 
         $this->assertResponseOk();
-        $tokenJson = json_decode((string)$this->_response->getBody(), true);
+        $tokenJson = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($tokenJson);
         $this->assertArrayHasKey('access_token', $tokenJson);
         $this->assertArrayHasKey('refresh_token', $tokenJson);
@@ -121,7 +121,7 @@ class AuthorizationCodeGrantWithPkceTest extends TesseraTestCase
         $this->get('/token-info');
         $this->assertResponseOk();
 
-        $info = json_decode((string)$this->_response->getBody(), true);
+        $info = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($info);
         $this->assertSame($client->id, $info['oauth_client_id']);
         $this->assertEquals($user->id, $info['oauth_user_id']);
@@ -136,7 +136,7 @@ class AuthorizationCodeGrantWithPkceTest extends TesseraTestCase
         ]);
         $this->assertResponseOk();
 
-        $newToken = json_decode((string)$this->_response->getBody(), true);
+        $newToken = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($newToken);
         $this->assertArrayHasKey('access_token', $newToken);
         $this->assertArrayHasKey('refresh_token', $newToken);
@@ -165,7 +165,7 @@ class AuthorizationCodeGrantWithPkceTest extends TesseraTestCase
         $this->get('/oauth/authorize?' . $query);
         $this->assertResponseCode(400);
 
-        $params = json_decode((string)$this->_response->getBody(), true);
+        $params = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($params);
         $this->assertSame('invalid_request', $params['error']);
         $this->assertSame('Code challenge must be provided for public clients', $params['hint']);
@@ -174,7 +174,7 @@ class AuthorizationCodeGrantWithPkceTest extends TesseraTestCase
         $this->get('/oauth/authorize?' . $query . '&code_challenge=foo');
         $this->assertResponseCode(400);
 
-        $params = json_decode((string)$this->_response->getBody(), true);
+        $params = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($params);
         $this->assertSame('invalid_request', $params['error']);
         $this->assertSame('Code challenge must follow the specifications of RFC-7636.', $params['hint']);
@@ -205,7 +205,7 @@ class AuthorizationCodeGrantWithPkceTest extends TesseraTestCase
         ]));
         $this->assertResponseCode(400);
 
-        $params = json_decode((string)$this->_response->getBody(), true);
+        $params = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($params);
         $this->assertSame('invalid_request', $params['error']);
         $this->assertStringStartsWith('Code challenge method must be', $params['hint']);
@@ -217,7 +217,7 @@ class AuthorizationCodeGrantWithPkceTest extends TesseraTestCase
      */
     protected function makePublicAuthCodeClient(): Client
     {
-        return (new ClientRepository())->createAuthorizationCodeGrantClient(
+        return new ClientRepository()->createAuthorizationCodeGrantClient(
             'Public Auth Code Client',
             ['http://localhost'],
             confidential: false,

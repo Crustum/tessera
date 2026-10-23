@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace Crustum\Tessera\ServiceProvider;
 
+use Cake\Container\ContainerInterface;
+use Cake\Container\ServiceProvider;
 use Cake\Core\Configure;
-use Cake\Core\ContainerInterface;
-use Cake\Core\ServiceProvider;
 use Cake\Utility\Security;
 use Crustum\Tessera\ApiTokenCookieFactory;
 use Crustum\Tessera\Bridge\AccessTokenRepository;
@@ -104,7 +104,7 @@ class TesseraServiceProvider extends ServiceProvider
     /**
      * Bind the shared authorization server with enabled grants.
      *
-     * @param \Cake\Core\ContainerInterface $container DI container
+     * @param \Cake\Container\ContainerInterface $container DI container
      * @return void
      */
     protected function registerAuthorizationServer(ContainerInterface $container): void
@@ -154,7 +154,7 @@ class TesseraServiceProvider extends ServiceProvider
     /**
      * Bind the resource server used by TokenAuthenticator and scope middleware.
      *
-     * @param \Cake\Core\ContainerInterface $container DI container
+     * @param \Cake\Container\ContainerInterface $container DI container
      * @return void
      */
     protected function registerResourceServer(ContainerInterface $container): void
@@ -168,7 +168,7 @@ class TesseraServiceProvider extends ServiceProvider
     /**
      * Bind PersonalAccessTokenFactory with a dedicated AuthorizationServer.
      *
-     * @param \Cake\Core\ContainerInterface $container DI container
+     * @param \Cake\Container\ContainerInterface $container DI container
      * @return void
      */
     protected function registerPersonalAccessTokenFactory(ContainerInterface $container): void
@@ -187,7 +187,7 @@ class TesseraServiceProvider extends ServiceProvider
     /**
      * Bind the SPA API token cookie factory from Session config and Security salt.
      *
-     * @param \Cake\Core\ContainerInterface $container DI container
+     * @param \Cake\Container\ContainerInterface $container DI container
      * @return void
      */
     protected function registerApiTokenCookieFactory(ContainerInterface $container): void
@@ -208,7 +208,7 @@ class TesseraServiceProvider extends ServiceProvider
     /**
      * Create and configure an Auth Code grant.
      *
-     * @param \Cake\Core\ContainerInterface $container DI container
+     * @param \Cake\Container\ContainerInterface $container DI container
      * @return \League\OAuth2\Server\Grant\AuthCodeGrant
      */
     protected function makeAuthCodeGrant(ContainerInterface $container): AuthCodeGrant
@@ -222,7 +222,7 @@ class TesseraServiceProvider extends ServiceProvider
     /**
      * Build the Auth Code grant instance.
      *
-     * @param \Cake\Core\ContainerInterface $container DI container
+     * @param \Cake\Container\ContainerInterface $container DI container
      * @return \League\OAuth2\Server\Grant\AuthCodeGrant
      */
     protected function buildAuthCodeGrant(ContainerInterface $container): AuthCodeGrant
@@ -237,7 +237,7 @@ class TesseraServiceProvider extends ServiceProvider
     /**
      * Create and configure a Refresh Token grant.
      *
-     * @param \Cake\Core\ContainerInterface $container DI container
+     * @param \Cake\Container\ContainerInterface $container DI container
      * @return \League\OAuth2\Server\Grant\RefreshTokenGrant
      */
     protected function makeRefreshTokenGrant(ContainerInterface $container): RefreshTokenGrant
@@ -251,7 +251,7 @@ class TesseraServiceProvider extends ServiceProvider
     /**
      * Create and configure a Password grant.
      *
-     * @param \Cake\Core\ContainerInterface $container DI container
+     * @param \Cake\Container\ContainerInterface $container DI container
      * @return \League\OAuth2\Server\Grant\PasswordGrant
      */
     protected function makePasswordGrant(ContainerInterface $container): PasswordGrant
@@ -278,7 +278,7 @@ class TesseraServiceProvider extends ServiceProvider
     /**
      * Create and configure a Device Code grant.
      *
-     * @param \Cake\Core\ContainerInterface $container DI container
+     * @param \Cake\Container\ContainerInterface $container DI container
      * @return \League\OAuth2\Server\Grant\DeviceCodeGrant
      */
     protected function makeDeviceCodeGrant(ContainerInterface $container): DeviceCodeGrant
@@ -316,7 +316,7 @@ class TesseraServiceProvider extends ServiceProvider
     /**
      * Build a League AuthorizationServer with Tessera crypt keys and defaults.
      *
-     * @param \Cake\Core\ContainerInterface $container DI container
+     * @param \Cake\Container\ContainerInterface $container DI container
      * @param \League\OAuth2\Server\ResponseTypes\ResponseTypeInterface|null $responseType Response type
      * @return \League\OAuth2\Server\AuthorizationServer
      */

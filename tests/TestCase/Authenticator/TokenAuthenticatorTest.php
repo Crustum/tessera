@@ -15,10 +15,10 @@ use Crustum\Tessera\Model\Entity\Client;
 use Crustum\Tessera\Tessera;
 use Crustum\Tessera\UserProvider;
 use Firebase\JWT\JWT;
-use League\OAuth2\Server\Exception\OAuthServerException;
-use League\OAuth2\Server\ResourceServer;
 use JMac\Testing\Double;
 use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
+use League\OAuth2\Server\Exception\OAuthServerException;
+use League\OAuth2\Server\ResourceServer;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -58,7 +58,7 @@ class TokenAuthenticatorTest extends TestCase
         $userProvider = Double::for(UserProvider::class);
         $clients = Double::for(ClientRepository::class);
 
-        $request = (new ServerRequest())->withHeader('Authorization', 'Bearer token');
+        $request = new ServerRequest()->withHeader('Authorization', 'Bearer token');
 
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
@@ -91,7 +91,7 @@ class TokenAuthenticatorTest extends TestCase
         $resourceServer = Double::for(ResourceServer::class);
         $userProvider = Double::for(UserProvider::class);
         $clients = Double::for(ClientRepository::class);
-        $request = (new ServerRequest())->withHeader('Authorization', 'Bearer token');
+        $request = new ServerRequest()->withHeader('Authorization', 'Bearer token');
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
         $psr = Double::for(ServerRequestInterface::class);
@@ -123,7 +123,7 @@ class TokenAuthenticatorTest extends TestCase
         $resourceServer = Double::for(ResourceServer::class);
         $userProvider = Double::for(UserProvider::class);
         $clients = Double::for(ClientRepository::class);
-        $request = (new ServerRequest())->withHeader('Authorization', 'Bearer token');
+        $request = new ServerRequest()->withHeader('Authorization', 'Bearer token');
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
         $resourceServer->expects('validateAuthenticatedRequest')
@@ -141,7 +141,7 @@ class TokenAuthenticatorTest extends TestCase
         $resourceServer = Double::for(ResourceServer::class);
         $userProvider = Double::for(UserProvider::class);
         $clients = Double::for(ClientRepository::class);
-        $request = (new ServerRequest())->withHeader('Authorization', 'Bearer token');
+        $request = new ServerRequest()->withHeader('Authorization', 'Bearer token');
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
         $clients->allows('findActive')->with('1')->returns($this->makeClient());
@@ -167,7 +167,7 @@ class TokenAuthenticatorTest extends TestCase
         $client = $this->makeClient(['client_credentials']);
         $clients->allows('findActive')->with($clientId)->returns($client);
 
-        $request = (new ServerRequest())->withHeader('Authorization', 'Bearer token');
+        $request = new ServerRequest()->withHeader('Authorization', 'Bearer token');
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
         $psr = Double::for(ServerRequestInterface::class);
@@ -186,7 +186,7 @@ class TokenAuthenticatorTest extends TestCase
     public function testUsersRetrievedFromCookiesWithoutEncryption(): void
     {
         Tessera::withoutCookieEncryption();
-        Tessera::encryptTokensUsing(fn (string $defaultKey): string => $defaultKey . '.mykey');
+        Tessera::encryptTokensUsing(fn(string $defaultKey): string => $defaultKey . '.mykey');
 
         $resourceServer = Double::for(ResourceServer::class);
         $userProvider = Double::for(UserProvider::class);
@@ -200,9 +200,9 @@ class TokenAuthenticatorTest extends TestCase
             'exp' => DateTime::now()->addMinutes(10)->getTimestamp(),
         ], Tessera::tokenEncryptionKey(Security::getSalt()), 'HS256');
 
-        $request = (new ServerRequest([
+        $request = new ServerRequest([
             'cookies' => [Tessera::cookie() => $jwt],
-        ]))->withHeader('X-CSRF-TOKEN', 'token');
+        ])->withHeader('X-CSRF-TOKEN', 'token');
 
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
         $expectedUser = new TokenAuthenticatorTestUser();
@@ -222,7 +222,7 @@ class TokenAuthenticatorTest extends TestCase
         $clients = Double::for(ClientRepository::class);
         $clients->allows('findActive')->with('1')->returns($this->makeClient());
 
-        $request = (new ServerRequest())->withHeader('Authorization', 'Bearer token');
+        $request = new ServerRequest()->withHeader('Authorization', 'Bearer token');
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
         $psr = Double::for(ServerRequestInterface::class);
@@ -374,7 +374,7 @@ class TokenAuthenticatorTest extends TestCase
     public function testUsersMayBeRetrievedFromCookiesWithXsrfTokenHeaderWhenUsingCustomEncryptionKey(): void
     {
         Tessera::withCookieEncryption();
-        Tessera::encryptTokensUsing(fn (string $defaultKey): string => $defaultKey . '.mykey');
+        Tessera::encryptTokensUsing(fn(string $defaultKey): string => $defaultKey . '.mykey');
 
         $resourceServer = Double::for(ResourceServer::class);
         $userProvider = Double::for(UserProvider::class);
@@ -400,7 +400,7 @@ class TokenAuthenticatorTest extends TestCase
         $resourceServer = Double::for(ResourceServer::class);
         $userProvider = Double::for(UserProvider::class);
         $clients = Double::for(ClientRepository::class);
-        $request = (new ServerRequest([
+        $request = new ServerRequest([
             'cookies' => [
                 'XSRF-TOKEN' => Security::encrypt('token', Security::getSalt()),
                 Tessera::cookie() => $this->encodeApiTokenCookie([
@@ -410,7 +410,7 @@ class TokenAuthenticatorTest extends TestCase
                     'exp' => DateTime::now()->addMinutes(10)->getTimestamp(),
                 ]),
             ],
-        ]));
+        ]);
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
         $userProvider->expects('retrieveById')->never();
@@ -454,7 +454,7 @@ class TokenAuthenticatorTest extends TestCase
         $clients = Double::for(ClientRepository::class);
         $clients->allows('findActive')->with('1')->returns($this->makeClient());
 
-        $request = (new ServerRequest([
+        $request = new ServerRequest([
             'cookies' => [
                 Tessera::cookie() => $this->encodeApiTokenCookie([
                     'sub' => 1,
@@ -462,7 +462,7 @@ class TokenAuthenticatorTest extends TestCase
                     'exp' => DateTime::now()->addMinutes(10)->getTimestamp(),
                 ]),
             ],
-        ]));
+        ]);
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
         $expectedUser = new TokenAuthenticatorTestUser();
         $userProvider->allows('retrieveById')->with(1)->returns($expectedUser);
@@ -479,7 +479,7 @@ class TokenAuthenticatorTest extends TestCase
         $resourceServer = Double::for(ResourceServer::class);
         $userProvider = Double::for(UserProvider::class);
         $clients = Double::for(ClientRepository::class);
-        $request = (new ServerRequest())->withHeader('Authorization', 'Bearer token');
+        $request = new ServerRequest()->withHeader('Authorization', 'Bearer token');
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
         $psr = Double::for(ServerRequestInterface::class);
@@ -500,7 +500,7 @@ class TokenAuthenticatorTest extends TestCase
         $resourceServer = Double::for(ResourceServer::class);
         $userProvider = Double::for(UserProvider::class);
         $clients = Double::for(ClientRepository::class);
-        $request = (new ServerRequest())->withHeader('Authorization', 'Bearer token');
+        $request = new ServerRequest()->withHeader('Authorization', 'Bearer token');
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
         $psr = Double::for(ServerRequestInterface::class);
@@ -524,7 +524,7 @@ class TokenAuthenticatorTest extends TestCase
         $resourceServer = Double::for(ResourceServer::class);
         $userProvider = Double::for(UserProvider::class);
         $clients = Double::for(ClientRepository::class);
-        $request = (new ServerRequest())->withHeader('Authorization', 'Bearer token');
+        $request = new ServerRequest()->withHeader('Authorization', 'Bearer token');
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
         $resourceServer->allows('validateAuthenticatedRequest')
@@ -542,7 +542,7 @@ class TokenAuthenticatorTest extends TestCase
         $resourceServer = Double::for(ResourceServer::class);
         $userProvider = Double::for(UserProvider::class);
         $clients = Double::for(ClientRepository::class);
-        $request = (new ServerRequest())->withHeader('Authorization', 'Bearer token');
+        $request = new ServerRequest()->withHeader('Authorization', 'Bearer token');
         $authenticator = $this->makeAuthenticator($resourceServer, $userProvider, $clients);
 
         $psr = Double::for(ServerRequestInterface::class);
@@ -593,11 +593,11 @@ class TokenAuthenticatorTest extends TestCase
             'exp' => DateTime::now()->addMinutes(10)->getTimestamp(),
         ], $jwtClaims);
 
-        $request = (new ServerRequest([
+        $request = new ServerRequest([
             'cookies' => [
                 Tessera::cookie() => $this->encodeApiTokenCookie($claims),
             ],
-        ]));
+        ]);
 
         if ($csrfHeader !== null) {
             $request = $request->withHeader('X-CSRF-TOKEN', $csrfHeader);

@@ -78,7 +78,7 @@ class TokenTest extends TestCase
     {
         $token = new Token();
 
-        $inheritedScopes = (fn (): array => $this->resolveInheritedScopes('admin:webhooks:read'))->call($token);
+        $inheritedScopes = (fn(): array => $this->resolveInheritedScopes('admin:webhooks:read'))->call($token);
 
         $this->assertSame([
             'admin',

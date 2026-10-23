@@ -7,12 +7,12 @@ use Cake\Http\ServerRequest;
 use Cake\TestSuite\TestCase;
 use Crustum\Tessera\Controller\AccessTokenController;
 use Crustum\Tessera\Exception\OAuthServerException;
-use Laminas\Diactoros\Response as PsrResponse;
-use League\OAuth2\Server\AuthorizationServer;
-use League\OAuth2\Server\Exception\OAuthServerException as LeagueException;
 use JMac\Testing\Double;
 use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
 use JMac\Testing\Matching\Argument;
+use Laminas\Diactoros\Response as PsrResponse;
+use League\OAuth2\Server\AuthorizationServer;
+use League\OAuth2\Server\Exception\OAuthServerException as LeagueException;
 
 /**
  * AccessTokenController unit tests.

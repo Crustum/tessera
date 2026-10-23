@@ -7,8 +7,8 @@ use Cake\Cache\Cache;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Text;
 use Crustum\Tessera\ClientRepository;
-use Crustum\Tessera\Test\Factory\ClientFactory;
 use Crustum\Tessera\Tessera;
+use Crustum\Tessera\Test\Factory\ClientFactory;
 use TestApp\Model\Entity\User;
 
 /**

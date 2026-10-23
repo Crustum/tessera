@@ -176,7 +176,7 @@ class PurgeCommandTest extends TesseraTestCase
             'id' => Text::uuid(),
             'user_id' => null,
             'client_id' => $clientId,
-            'user_code' => strtoupper(substr(str_replace('-', '', Text::uuid()), 0, 8)),
+            'user_code' => strtoupper(substr(str_replace('-', '', Text::uuid()), -8)),
             'scopes' => [],
             'revoked' => $revoked,
             'expires' => $expires,

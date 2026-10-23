@@ -5,6 +5,7 @@ on:
     branches:
       - 'main'
       - '1.x'
+      - '2.x'
   pull_request:
     branches:
       - '*'
@@ -20,21 +21,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - php-version: '8.2'
+          - php-version: '8.5'
             db-type: 'mysql'
             dependencies: lowest
-          - php-version: '8.3'
-            db-type: 'mysql'
-            dependencies: highest
-          - php-version: '8.3'
-            db-type: 'pgsql'
-            dependencies: highest
-          - php-version: '8.4'
-            db-type: 'mysql'
-            dependencies: highest
-          - php-version: '8.4'
-            db-type: 'pgsql'
-            dependencies: highest
           - php-version: '8.5'
             db-type: 'mysql'
             dependencies: highest
@@ -86,7 +75,7 @@ jobs:
       run: composer install --prefer-dist --no-progress
 
     - name: Setup problem matchers for PHPUnit
-      if: matrix.php-version == '8.2' && matrix.db-type == 'mysql'
+      if: matrix.php-version == '8.5' && matrix.db-type == 'mysql'
       run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
 
     - name: Debug MySQL Connection
@@ -99,7 +88,7 @@ jobs:
         echo "db_dsn: $db_dsn"
 
     - name: Run PHPUnit with coverage
-      if: matrix.php-version == '8.2' && matrix.db-type == 'mysql'
+      if: matrix.php-version == '8.5' && matrix.db-type == 'mysql'
       run: |
         export CODECOVERAGE=1
         if [[ "${{ matrix.db-type }}" == 'mysql' ]]; then export db_dsn='mysql://root:root@127.0.0.1:3306/rhythm_test?encoding=utf8mb4&timezone=UTC&cacheMetadata=true&quoteIdentifiers=true&persistent=false'; fi
@@ -107,14 +96,14 @@ jobs:
         vendor/bin/phpunit --configuration=phpunit.xml --display-deprecations --display-incomplete --display-skipped --coverage-clover=coverage.xml
 
     - name: Run PHPUnit without coverage
-      if: matrix.php-version != '8.2' || matrix.db-type != 'mysql'
+      if: matrix.php-version != '8.5' || matrix.db-type != 'mysql'
       run: |
         if [[ "${{ matrix.db-type }}" == 'mysql' ]]; then export db_dsn='mysql://root:root@127.0.0.1:3306/rhythm_test?encoding=utf8mb4&timezone=UTC&cacheMetadata=true&quoteIdentifiers=true&persistent=false'; fi
         if [[ "${{ matrix.db-type }}" == 'pgsql' ]]; then export db_dsn='postgres://postgres:postgres@127.0.0.1:5432/rhythm_test?encoding=utf8&timezone=UTC&cacheMetadata=true&quoteIdentifiers=true&persistent=false'; fi
         vendor/bin/phpunit --configuration=phpunit.xml
 
     - name: Submit code coverage
-      if: matrix.php-version == '8.2' && matrix.db-type == 'mysql'
+      if: matrix.php-version == '8.5' && matrix.db-type == 'mysql'
       uses: codecov/codecov-action@v3
 
   cs-stan:
@@ -127,7 +116,7 @@ jobs:
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.3'
+        php-version: '8.5'
         extensions: mbstring, intl, openssl, json
         coverage: none
         tools: phive

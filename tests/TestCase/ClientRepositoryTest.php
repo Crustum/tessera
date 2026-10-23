@@ -6,9 +6,9 @@ namespace Crustum\Tessera\Test\TestCase;
 use Cake\ORM\TableRegistry;
 use Crustum\Tessera\ClientRepository;
 use Crustum\Tessera\Model\Entity\Client;
+use Crustum\Tessera\Tessera;
 use Crustum\Tessera\Test\Factory\ClientFactory;
 use Crustum\Tessera\Test\TestCase\Feature\TesseraTestCase;
-use Crustum\Tessera\Tessera;
 
 /**
  * ClientRepository identifier guard unit tests.
@@ -48,7 +48,7 @@ class ClientRepositoryTest extends TesseraTestCase
 
         $model = ClientFactory::new()->save();
 
-        $this->assertSame($model->id, (new ClientRepository())->find($model->id)?->id);
+        $this->assertSame($model->id, new ClientRepository()->find($model->id)?->id);
     }
 
     /**
@@ -60,7 +60,7 @@ class ClientRepositoryTest extends TesseraTestCase
 
         $model = ClientFactory::new()->save();
 
-        $this->assertSame($model->id, (new ClientRepository())->find($model->id)?->id);
+        $this->assertSame($model->id, new ClientRepository()->find($model->id)?->id);
     }
 
     /**
@@ -92,20 +92,5 @@ class ClientRepositoryTest extends TesseraTestCase
             Tessera::useClientModel(Client::class);
             TableRegistry::getTableLocator()->clear();
         }
-    }
-}
-
-/**
- * Client model with ULID identifiers for unique-id guard tests.
- */
-class UlidClient extends Client
-{
-    /**
-     * @param string|int $id Client identifier
-     * @return bool
-     */
-    public function isValidUniqueId(string|int $id): bool
-    {
-        return is_string($id) && preg_match('/^[0-9A-HJKMNP-TV-Z]{26}$/', $id) === 1;
     }
 }

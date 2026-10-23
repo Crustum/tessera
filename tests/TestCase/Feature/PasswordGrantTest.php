@@ -44,7 +44,7 @@ class PasswordGrantTest extends TesseraTestCase
      */
     public function testIssueToken(): void
     {
-        $client = (new ClientRepository())->createPasswordGrantClient('Test Client', null, true);
+        $client = new ClientRepository()->createPasswordGrantClient('Test Client', null, true);
         $user = $this->createUser();
 
         $this->post('/oauth/token', [
@@ -57,7 +57,7 @@ class PasswordGrantTest extends TesseraTestCase
         ]);
 
         $this->assertResponseOk();
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertArrayHasKey('access_token', $json);
         $this->assertArrayHasKey('refresh_token', $json);
@@ -73,7 +73,7 @@ class PasswordGrantTest extends TesseraTestCase
         $this->get('/token-info');
         $this->assertResponseOk();
 
-        $info = json_decode((string)$this->_response->getBody(), true);
+        $info = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($info);
         $this->assertSame($client->id, $info['oauth_client_id']);
         $this->assertEquals($user->id, $info['oauth_user_id']);
@@ -85,7 +85,7 @@ class PasswordGrantTest extends TesseraTestCase
      */
     public function testIssueTokenWithAllScopes(): void
     {
-        $client = (new ClientRepository())->createPasswordGrantClient('Test Client', null, true);
+        $client = new ClientRepository()->createPasswordGrantClient('Test Client', null, true);
         $user = $this->createUser();
 
         $this->post('/oauth/token', [
@@ -98,7 +98,7 @@ class PasswordGrantTest extends TesseraTestCase
         ]);
 
         $this->assertResponseOk();
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertArrayHasKey('access_token', $json);
         $this->assertArrayHasKey('refresh_token', $json);
@@ -114,7 +114,7 @@ class PasswordGrantTest extends TesseraTestCase
         $this->get('/token-info');
         $this->assertResponseOk();
 
-        $info = json_decode((string)$this->_response->getBody(), true);
+        $info = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($info);
         $this->assertSame($client->id, $info['oauth_client_id']);
         $this->assertEquals($user->id, $info['oauth_user_id']);
@@ -126,7 +126,7 @@ class PasswordGrantTest extends TesseraTestCase
      */
     public function testPublicClient(): void
     {
-        $client = (new ClientRepository())->createPasswordGrantClient('Public Client', null, false);
+        $client = new ClientRepository()->createPasswordGrantClient('Public Client', null, false);
         $user = $this->createUser();
 
         $this->post('/oauth/token', [
@@ -137,7 +137,7 @@ class PasswordGrantTest extends TesseraTestCase
         ]);
 
         $this->assertResponseOk();
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertArrayHasKey('access_token', $json);
         $this->assertArrayHasKey('refresh_token', $json);
@@ -150,7 +150,7 @@ class PasswordGrantTest extends TesseraTestCase
      */
     public function testUnauthorizedClient(): void
     {
-        $client = (new ClientRepository())->createAuthorizationCodeGrantClient(
+        $client = new ClientRepository()->createAuthorizationCodeGrantClient(
             'Auth Code Client',
             ['http://localhost'],
         );
@@ -165,7 +165,7 @@ class PasswordGrantTest extends TesseraTestCase
         ]);
 
         $this->assertResponseCode(400);
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertSame('unauthorized_client', $json['error']);
         $this->assertSame(

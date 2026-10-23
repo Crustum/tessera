@@ -5,7 +5,6 @@ namespace Crustum\Tessera\Command;
 
 use Cake\Command\Command;
 use Cake\Console\Arguments;
-use Cake\Console\ConsoleIo;
 use Cake\Console\ConsoleOptionParser;
 use Cake\Core\Configure;
 use Crustum\Tessera\ClientRepository;
@@ -22,11 +21,6 @@ class ClientCommand extends Command
      * @var \Cake\Console\Arguments
      */
     protected Arguments $args;
-
-    /**
-     * @var \Cake\Console\ConsoleIo
-     */
-    protected ConsoleIo $io;
 
     /**
      * @inheritDoc
@@ -100,37 +94,31 @@ class ClientCommand extends Command
     /**
      * @inheritDoc
      */
-    public function execute(Arguments $args, ConsoleIo $io): ?int
+    public function execute(): ?int
     {
-        $this->args = $args;
-        $this->io = $io;
-
-        $name = $args->getOption('name');
+        $name = $this->args->getOption('name');
         if (!is_string($name) || $name === '') {
-            $name = $io->ask(
+            $name = $this->io->ask(
                 'What should we name the client?',
                 (string)(Configure::read('App.name') ?? 'Tessera'),
             );
         }
 
         $clients = new ClientRepository();
-
         $client = match (true) {
-            (bool)$args->getOption('personal') => $this->createPersonalAccessClient($clients, $name),
-            (bool)$args->getOption('password') => $this->createPasswordClient($clients, $name),
-            (bool)$args->getOption('client') => $clients->createClientCredentialsGrantClient($name),
-            (bool)$args->getOption('implicit') => $this->createImplicitClient($clients, $name),
-            (bool)$args->getOption('device') => $this->createDeviceCodeClient($clients, $name),
+            (bool)$this->args->getOption('personal') => $this->createPersonalAccessClient($clients, $name),
+            (bool)$this->args->getOption('password') => $this->createPasswordClient($clients, $name),
+            (bool)$this->args->getOption('client') => $clients->createClientCredentialsGrantClient($name),
+            (bool)$this->args->getOption('implicit') => $this->createImplicitClient($clients, $name),
+            (bool)$this->args->getOption('device') => $this->createDeviceCodeClient($clients, $name),
             default => $this->createAuthCodeClient($clients, $name),
         };
-
-        $io->success('New client created successfully.');
-
+        $this->io->success('New client created successfully.');
         if ($client instanceof Client) {
-            $io->out(sprintf('Client ID: %s', $client->id));
+            $this->io->out(sprintf('Client ID: %s', $client->id));
             if ($client->confidential()) {
-                $io->out(sprintf('Client Secret: %s', $client->plainSecret));
-                $io->warning("The client secret will not be shown again, so don't lose it!");
+                $this->io->out(sprintf('Client Secret: %s', $client->plainSecret));
+                $this->io->warning("The client secret will not be shown again, so don't lose it!");
             }
         }
 

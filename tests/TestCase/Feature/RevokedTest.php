@@ -25,13 +25,13 @@ use DateTimeImmutable;
  */
 class RevokedTest extends TestCase
 {
-    private const CLIENT_ID = '019c9d23-9763-7303-9bdb-3a0a6bf0ef90';
+    private const string CLIENT_ID = '019c9d23-9763-7303-9bdb-3a0a6bf0ef90';
 
-    private const TOKEN_ID = 'token-id-001';
+    private const string TOKEN_ID = 'token-id-001';
 
-    private const ACCESS_TOKEN_ID = 'access-token-id-001';
+    private const string ACCESS_TOKEN_ID = 'access-token-id-001';
 
-    private const DEVICE_CODE_ID = 'device-code-id-001';
+    private const string DEVICE_CODE_ID = 'device-code-id-001';
 
     /**
      * @var list<object>

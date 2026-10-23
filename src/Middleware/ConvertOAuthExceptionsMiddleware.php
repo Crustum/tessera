@@ -38,7 +38,7 @@ class ConvertOAuthExceptionsMiddleware implements MiddlewareInterface
      */
     protected function convertResponse(ResponseInterface $psrResponse): Response
     {
-        $response = (new Response())->withStatus($psrResponse->getStatusCode());
+        $response = new Response()->withStatus($psrResponse->getStatusCode());
 
         foreach ($psrResponse->getHeaders() as $name => $values) {
             $response = $response->withHeader($name, $values);

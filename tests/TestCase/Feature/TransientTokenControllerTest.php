@@ -22,7 +22,7 @@ class TransientTokenControllerTest extends TesseraTestCase
         $this->assertResponseOk();
         $this->assertResponseEquals('Refreshed.');
 
-        $cookie = $this->_response->getCookie(Tessera::cookie());
+        $cookie = $this->response->getCookie(Tessera::cookie());
         $this->assertIsArray($cookie);
         $this->assertNotEmpty($cookie['value'] ?? null);
     }

@@ -41,6 +41,7 @@ define('CAKE', CORE_PATH . 'src' . DS);
 require ROOT . '/vendor/cakephp/cakephp/src/functions.php';
 require ROOT . '/vendor/autoload.php';
 
+use App\Controller\AppController;
 use Cake\Cache\Cache;
 use Cake\Core\Configure;
 use Cake\Core\Plugin;
@@ -49,9 +50,10 @@ use Cake\Error\ErrorTrap;
 use Cake\TestSuite\Fixture\SchemaLoader;
 use Crustum\Tessera\Tessera;
 use Crustum\Tessera\TesseraPlugin;
+use TestApp\Controller\AppController as TestAppAppController;
 
-if (!class_exists(\App\Controller\AppController::class, false)) {
-    class_alias(\TestApp\Controller\AppController::class, \App\Controller\AppController::class);
+if (!class_exists(AppController::class, false)) {
+    class_alias(TestAppAppController::class, AppController::class);
 }
 
 Configure::write('App', ['namespace' => 'TestApp']);
@@ -143,7 +145,7 @@ $error = [
     'trace' => true,
     'ignoredDeprecationPaths' => [],
 ];
-(new ErrorTrap($error))->register();
+new ErrorTrap($error)->register();
 
 if (file_exists(CONFIG . 'bootstrap.php')) {
     require CONFIG . 'bootstrap.php';

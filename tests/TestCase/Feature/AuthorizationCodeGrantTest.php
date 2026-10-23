@@ -64,7 +64,7 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
         ]));
 
         $this->assertResponseOk();
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertEqualsCanonicalizing(
             ['client', 'user', 'scopes', 'request', 'authToken'],
@@ -84,7 +84,7 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
         $this->assertNull($this->getSession()->read('authRequest'));
         $this->assertNull($this->getSession()->read('authToken'));
 
-        $location = $this->_response->getHeaderLine('Location');
+        $location = $this->response->getHeaderLine('Location');
         parse_str((string)parse_url($location, PHP_URL_QUERY), $params);
 
         $this->assertStringStartsWith($redirect . '?', $location);
@@ -100,7 +100,7 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
         ]);
 
         $this->assertResponseOk();
-        $tokenJson = json_decode((string)$this->_response->getBody(), true);
+        $tokenJson = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($tokenJson);
         $this->assertArrayHasKey('access_token', $tokenJson);
         $this->assertArrayHasKey('refresh_token', $tokenJson);
@@ -116,7 +116,7 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
         $this->get('/token-info');
         $this->assertResponseOk();
 
-        $info = json_decode((string)$this->_response->getBody(), true);
+        $info = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($info);
         $this->assertSame($client->id, $info['oauth_client_id']);
         $this->assertEquals($user->id, $info['oauth_user_id']);
@@ -143,16 +143,16 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
         ]));
 
         $this->assertResponseOk();
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
 
         $this->syncSession();
-        $this->_sendRequest('/oauth/authorize', 'DELETE', ['auth_token' => $json['authToken']]);
+        $this->sendRequest('/oauth/authorize', 'DELETE', ['auth_token' => $json['authToken']]);
         $this->assertResponseCode(302);
         $this->assertNull($this->getSession()->read('authRequest'));
         $this->assertNull($this->getSession()->read('authToken'));
 
-        $location = $this->_response->getHeaderLine('Location');
+        $location = $this->response->getHeaderLine('Location');
         parse_str((string)parse_url($location, PHP_URL_QUERY), $params);
 
         $this->assertStringStartsWith($redirect . '?', $location);
@@ -183,7 +183,7 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
         ]));
         $this->assertResponseCode(302);
 
-        $location = $this->_response->getHeaderLine('Location');
+        $location = $this->response->getHeaderLine('Location');
         parse_str((string)parse_url($location, PHP_URL_QUERY), $params);
 
         $this->assertStringStartsWith($redirect . '?', $location);
@@ -213,7 +213,7 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
         ]));
         $this->assertResponseCode(302);
 
-        $location = $this->_response->getHeaderLine('Location');
+        $location = $this->response->getHeaderLine('Location');
         parse_str((string)parse_url($location, PHP_URL_QUERY), $params);
 
         $this->assertStringStartsWith($redirect . '?', $location);
@@ -244,7 +244,7 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
         $this->assertResponseOk();
         $this->assertNotNull($this->getSession()->read('authRequest'));
         $this->assertNotNull($this->getSession()->read('authToken'));
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertEqualsCanonicalizing(
             ['client', 'user', 'scopes', 'request', 'authToken'],
@@ -280,7 +280,7 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
         $this->assertResponseOk();
         $this->assertNotNull($this->getSession()->read('authRequest'));
         $this->assertNotNull($this->getSession()->read('authToken'));
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertEqualsCanonicalizing(
             ['client', 'user', 'scopes', 'request', 'authToken'],
@@ -316,7 +316,7 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
             'state' => Text::uuid(),
         ]));
 
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertSame('invalid_client', $json['error']);
         $this->assertArrayHasKey('error_description', $json);
@@ -340,7 +340,7 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
         ]));
         $this->assertResponseCode(302);
 
-        $location = $this->_response->getHeaderLine('Location');
+        $location = $this->response->getHeaderLine('Location');
         parse_str((string)parse_url($location, PHP_URL_QUERY), $params);
 
         $this->assertStringStartsWith($redirect . '?', $location);
@@ -364,7 +364,7 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
 
         $this->assertResponseCode(302);
         $this->assertTrue((bool)$this->getSession()->read('promptedForLogin'));
-        $this->assertStringContainsString('/login', $this->_response->getHeaderLine('Location'));
+        $this->assertStringContainsString('/login', $this->response->getHeaderLine('Location'));
     }
 
     /**
@@ -386,7 +386,7 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
         ]));
         $this->assertResponseCode(302);
 
-        $location = $this->_response->getHeaderLine('Location');
+        $location = $this->response->getHeaderLine('Location');
         parse_str((string)parse_url($location, PHP_URL_QUERY), $params);
 
         $this->assertStringStartsWith($redirect . '?', $location);
@@ -413,7 +413,7 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
         ]));
         $this->assertResponseCode(302);
 
-        $location = $this->_response->getHeaderLine('Location');
+        $location = $this->response->getHeaderLine('Location');
         parse_str((string)parse_url($location, PHP_URL_QUERY), $params);
 
         $this->assertStringStartsWith($redirect . '?', $location);
@@ -446,7 +446,7 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
         $this->assertResponseOk();
         $this->assertNotNull($this->getSession()->read('authRequest'));
         $this->assertNotNull($this->getSession()->read('authToken'));
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertEqualsCanonicalizing(
             ['client', 'user', 'scopes', 'request', 'authToken'],
@@ -480,7 +480,7 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
 
         $this->assertResponseCode(302);
         $this->assertTrue((bool)$this->getSession()->read('promptedForLogin'));
-        $this->assertStringContainsString('/login', $this->_response->getHeaderLine('Location'));
+        $this->assertStringContainsString('/login', $this->response->getHeaderLine('Location'));
     }
 
     /**
@@ -507,7 +507,7 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
 
         $this->assertResponseCode(302);
         $this->assertTrue((bool)$this->getSession()->read('promptedForLogin'));
-        $loginLocation = $this->_response->getHeaderLine('Location');
+        $loginLocation = $this->response->getHeaderLine('Location');
         $this->assertStringContainsString('/login', $loginLocation);
 
         parse_str((string)parse_url($loginLocation, PHP_URL_QUERY), $loginParams);
@@ -520,7 +520,7 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
         $this->assertResponseOk();
         $this->assertNotNull($this->getSession()->read('authRequest'));
         $this->assertNotNull($this->getSession()->read('authToken'));
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertEqualsCanonicalizing(
             ['client', 'user', 'scopes', 'request', 'authToken'],
@@ -554,7 +554,7 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
         ]));
         $this->assertResponseCode(302);
 
-        $location = $this->_response->getHeaderLine('Location');
+        $location = $this->response->getHeaderLine('Location');
         parse_str((string)parse_url($location, PHP_URL_QUERY), $params);
 
         $this->assertStringStartsWith($redirect . '?', $location);
@@ -580,7 +580,7 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
         $this->assertResponseCode(400);
         $this->assertNull($this->getSession()->read('authRequest'));
         $this->assertNull($this->getSession()->read('authToken'));
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
         $this->assertSame('unauthorized_client', $json['error']);
         $this->assertSame(
@@ -605,13 +605,13 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
             'response_type' => 'code',
         ]));
         $this->assertResponseOk();
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
 
         $this->syncSession();
         $this->post('/oauth/authorize', ['auth_token' => $json['authToken']]);
         $this->assertResponseCode(302);
-        parse_str((string)parse_url($this->_response->getHeaderLine('Location'), PHP_URL_QUERY), $params);
+        parse_str((string)parse_url($this->response->getHeaderLine('Location'), PHP_URL_QUERY), $params);
 
         $this->post('/oauth/token', [
             'grant_type' => 'authorization_code',
@@ -622,7 +622,7 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
         ]);
         $this->assertResponseOk();
 
-        $tokenJson = json_decode((string)$this->_response->getBody(), true);
+        $tokenJson = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($tokenJson);
         $this->assertArrayHasKey('access_token', $tokenJson);
         $this->assertArrayNotHasKey('refresh_token', $tokenJson);
@@ -656,7 +656,7 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
             $this->assertNull($this->getSession()->read('authRequest'));
             $this->assertNull($this->getSession()->read('authToken'));
 
-            $location = $this->_response->getHeaderLine('Location');
+            $location = $this->response->getHeaderLine('Location');
             parse_str((string)parse_url($location, PHP_URL_QUERY), $params);
 
             $this->assertStringStartsWith($redirect . '?', $location);
@@ -685,7 +685,7 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
      */
     protected function makeAuthCodeClient(): Client
     {
-        return (new ClientRepository())->createAuthorizationCodeGrantClient(
+        return new ClientRepository()->createAuthorizationCodeGrantClient(
             'Auth Code Client',
             ['http://localhost'],
         );
@@ -729,13 +729,13 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
             'state' => Text::uuid(),
         ]));
         $this->assertResponseOk();
-        $json = json_decode((string)$this->_response->getBody(), true);
+        $json = json_decode((string)$this->response->getBody(), true);
         $this->assertIsArray($json);
 
         $this->syncSession();
         $this->post('/oauth/authorize', ['auth_token' => $json['authToken']]);
         $this->assertResponseCode(302);
-        parse_str((string)parse_url($this->_response->getHeaderLine('Location'), PHP_URL_QUERY), $params);
+        parse_str((string)parse_url($this->response->getHeaderLine('Location'), PHP_URL_QUERY), $params);
 
         $this->post('/oauth/token', [
             'grant_type' => 'authorization_code',
@@ -745,19 +745,5 @@ class AuthorizationCodeGrantTest extends TesseraTestCase
             'code' => $params['code'],
         ]);
         $this->assertResponseOk();
-    }
-}
-
-/**
- * Client entity that always skips the authorization prompt.
- */
-class SkipsAuthorizationClient extends Client
-{
-    /**
-     * @inheritDoc
-     */
-    public function skipsAuthorization(object $user, array $scopes): bool
-    {
-        return true;
     }
 }

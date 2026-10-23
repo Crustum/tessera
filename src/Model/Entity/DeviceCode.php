@@ -23,7 +23,7 @@ class DeviceCode extends Entity
     /**
      * @var array<string, bool>
      */
-    protected array $_accessible = [
+    protected array $patchable = [
         'user_id' => true,
         'client_id' => true,
         'user_code' => true,
