@@ -17,10 +17,10 @@ class ClientFactoryTest extends TesseraTestCase
      */
     public function testPersistCreatesOauthClientRow(): void
     {
-        $client = ClientFactory::make([
+        $client = ClientFactory::new([
             'name' => 'Factory Persist Client',
             'redirect_uris' => ['https://example.test/callback'],
-        ])->persist();
+        ])->save();
 
         $this->assertInstanceOf(Client::class, $client);
         $this->assertNotEmpty($client->id);
@@ -36,7 +36,7 @@ class ClientFactoryTest extends TesseraTestCase
      */
     public function testPersistAsClientCredentials(): void
     {
-        $client = ClientFactory::make()->asClientCredentials()->persist();
+        $client = ClientFactory::new()->asClientCredentials()->save();
 
         $this->assertTrue($client->hasGrantType('client_credentials'));
         $this->assertSame([], $client->redirect_uris);

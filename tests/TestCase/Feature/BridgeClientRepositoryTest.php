@@ -19,10 +19,10 @@ class BridgeClientRepositoryTest extends TesseraTestCase
      */
     public function testCanGetClient(): void
     {
-        $model = ClientFactory::make([
+        $model = ClientFactory::new([
             'name' => 'Client',
             'redirect_uris' => ['http://localhost'],
-        ])->persist();
+        ])->save();
 
         $client = $this->repository()->getClientEntity($model->id);
 
@@ -38,7 +38,7 @@ class BridgeClientRepositoryTest extends TesseraTestCase
      */
     public function testCanGetPublicClient(): void
     {
-        $model = ClientFactory::make()->asPublic()->persist();
+        $model = ClientFactory::new()->asPublic()->save();
 
         $client = $this->repository()->getClientEntity($model->id);
 
@@ -51,7 +51,7 @@ class BridgeClientRepositoryTest extends TesseraTestCase
      */
     public function testCannotGetRevokedOrMissingClient(): void
     {
-        $revoked = ClientFactory::make(['revoked' => true])->persist();
+        $revoked = ClientFactory::new(['revoked' => true])->save();
 
         $repository = $this->repository();
 
@@ -64,7 +64,7 @@ class BridgeClientRepositoryTest extends TesseraTestCase
      */
     public function testCanValidateClient(): void
     {
-        $model = ClientFactory::make()->asClientCredentials()->persist();
+        $model = ClientFactory::new()->asClientCredentials()->save();
         $secret = $model->plainSecret;
         $this->assertNotEmpty($secret);
 
@@ -83,8 +83,8 @@ class BridgeClientRepositoryTest extends TesseraTestCase
      */
     public function testCannotValidateRevokedOrPublicClient(): void
     {
-        $revoked = ClientFactory::make(['revoked' => true])->persist();
-        $public = ClientFactory::make()->asPublic()->persist();
+        $revoked = ClientFactory::new(['revoked' => true])->save();
+        $public = ClientFactory::new()->asPublic()->save();
 
         $repository = $this->repository();
 

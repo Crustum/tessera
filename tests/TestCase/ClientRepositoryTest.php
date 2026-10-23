@@ -46,7 +46,7 @@ class ClientRepositoryTest extends TesseraTestCase
     {
         Tessera::$clientUuids = true;
 
-        $model = ClientFactory::make()->persist();
+        $model = ClientFactory::new()->save();
 
         $this->assertSame($model->id, (new ClientRepository())->find($model->id)?->id);
     }
@@ -58,7 +58,7 @@ class ClientRepositoryTest extends TesseraTestCase
     {
         Tessera::$clientUuids = false;
 
-        $model = ClientFactory::make()->persist();
+        $model = ClientFactory::new()->save();
 
         $this->assertSame($model->id, (new ClientRepository())->find($model->id)?->id);
     }

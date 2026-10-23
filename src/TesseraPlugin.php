@@ -9,8 +9,6 @@ use Cake\Core\Configure;
 use Cake\Core\ContainerInterface;
 use Cake\Core\PluginApplicationInterface;
 use Cake\Routing\RouteBuilder;
-use Crustum\PluginManifest\Manifest\ManifestInterface;
-use Crustum\PluginManifest\Manifest\ManifestTrait;
 use Crustum\Tessera\Command\ClientCommand;
 use Crustum\Tessera\Command\HashCommand;
 use Crustum\Tessera\Command\KeysCommand;
@@ -19,13 +17,9 @@ use Crustum\Tessera\ServiceProvider\TesseraServiceProvider;
 
 /**
  * CakePHP plugin bootstrap for Crustum Tessera.
- *
- * @uses \Crustum\PluginManifest\Manifest\ManifestTrait
  */
-class TesseraPlugin extends BasePlugin implements ManifestInterface
+class TesseraPlugin extends BasePlugin
 {
-    use ManifestTrait;
-
     /**
      * Load plugin bootstrap logic.
      *
@@ -144,31 +138,5 @@ class TesseraPlugin extends BasePlugin implements ManifestInterface
     public function services(ContainerInterface $container): void
     {
         $container->addServiceProvider(new TesseraServiceProvider());
-    }
-
-    /**
-     * Plugin install assets (config + migrations) via crustum/plugin-manifest.
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    public static function manifest(): array
-    {
-        $pluginPath = dirname(__DIR__);
-
-        return array_merge(
-            static::manifestMigrations(
-                $pluginPath . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'Migrations',
-            ),
-            static::manifestConfig(
-                $pluginPath . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'tessera.php',
-                CONFIG . 'tessera.php',
-                false,
-            ),
-            static::manifestBootstrapAppend(
-                "if (file_exists(CONFIG . 'tessera.php')) {\n    Configure::load('tessera', 'default');\n}",
-                '// Tessera Plugin Configuration',
-            ),
-            static::manifestStarRepo('Crustum/Tessera'),
-        );
     }
 }

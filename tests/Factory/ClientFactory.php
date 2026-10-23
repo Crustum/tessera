@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Crustum\Tessera\Test\Factory;
 
 use CakephpFixtureFactories\Factory\BaseFactory;
-use Faker\Generator;
+use CakephpFixtureFactories\Generator\GeneratorInterface;
 
 /**
  * Test factory for OAuth clients.
@@ -24,17 +24,17 @@ class ClientFactory extends BaseFactory
     /**
      * @return void
      */
-    protected function setDefaultTemplate(): void
+    public function definition(GeneratorInterface $generator): array
     {
-        $this->setDefaultData(fn(Generator $faker): array => [
+        return [
             'owner_id' => null,
             'owner_type' => null,
-            'name' => $faker->company(),
-            'secret' => $faker->sha1(),
-            'redirect_uris' => [$faker->url()],
+            'name' => $generator->company(),
+            'secret' => $generator->sha1(),
+            'redirect_uris' => [$generator->url()],
             'grant_types' => ['authorization_code', 'refresh_token'],
             'revoked' => false,
-        ]);
+        ];
     }
 
     /**
@@ -44,7 +44,7 @@ class ClientFactory extends BaseFactory
      */
     public function asPublic()
     {
-        return $this->patchData([
+        return $this->state([
             'secret' => null,
         ]);
     }
@@ -56,7 +56,7 @@ class ClientFactory extends BaseFactory
      */
     public function asPasswordClient()
     {
-        return $this->patchData([
+        return $this->state([
             'grant_types' => ['password', 'refresh_token'],
             'redirect_uris' => [],
         ]);
@@ -69,7 +69,7 @@ class ClientFactory extends BaseFactory
      */
     public function asPersonalAccessTokenClient()
     {
-        return $this->patchData([
+        return $this->state([
             'grant_types' => ['personal_access'],
             'redirect_uris' => [],
         ]);
@@ -82,7 +82,7 @@ class ClientFactory extends BaseFactory
      */
     public function asImplicitClient()
     {
-        return $this->patchData([
+        return $this->state([
             'grant_types' => ['implicit'],
             'secret' => null,
         ]);
@@ -95,7 +95,7 @@ class ClientFactory extends BaseFactory
      */
     public function asClientCredentials()
     {
-        return $this->patchData([
+        return $this->state([
             'grant_types' => ['client_credentials'],
             'redirect_uris' => [],
         ]);
@@ -108,7 +108,7 @@ class ClientFactory extends BaseFactory
      */
     public function asDeviceCodeClient()
     {
-        return $this->patchData([
+        return $this->state([
             'grant_types' => ['urn:ietf:params:oauth:grant-type:device_code', 'refresh_token'],
             'redirect_uris' => [],
         ]);

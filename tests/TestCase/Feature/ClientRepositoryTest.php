@@ -25,21 +25,21 @@ class ClientRepositoryTest extends TesseraTestCase
         $other = $this->createUser();
         $repository = new ClientRepository();
 
-        $mine = ClientFactory::make([
+        $mine = ClientFactory::new([
             'owner_id' => (string)$user->id,
             'owner_type' => User::class,
             'name' => 'Mine',
-        ])->persist();
-        ClientFactory::make([
+        ])->save();
+        ClientFactory::new([
             'owner_id' => (string)$user->id,
             'owner_type' => User::class,
             'name' => 'Revoked',
             'revoked' => true,
-        ])->persist();
-        ClientFactory::make([
+        ])->save();
+        ClientFactory::new([
             'owner_id' => (string)$other->id,
             'owner_type' => User::class,
-        ])->persist();
+        ])->save();
 
         $clients = $repository->forUser($user);
 
