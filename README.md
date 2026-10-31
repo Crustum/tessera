@@ -1,10 +1,10 @@
 # Crustum Tessera
 
-Crustum Tessera is a CakePHP 5 OAuth2 server and API token plugin.
+Crustum Tessera is a CakePHP OAuth2 server and API token plugin.
 
 ## Requirements
 
-* PHP 8.2+
+* PHP 8.5+
 
 See [Versions.md](docs/Versions.md) for the supported CakePHP versions.
 
